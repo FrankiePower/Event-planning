@@ -1,25 +1,29 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./EventManagerFactory.sol";
+import {Error} from "./Utils/Errors.sol";
 
 contract SponsorAgreement is ReentrancyGuard {
     struct Sponsor {
         uint256 contribution;
         uint256 revenueShare;
         bool paid;
+        bool active;
         uint256 eventId;
     }
 
     mapping(address => Sponsor) public sponsors;
-    address[] public sponsorAddresses;
     uint256 public totalContributions;
     uint256 public totalRevenueShares;
     address public organizer;
     bool public isTerminated;
+    uint256 public eventId;
 
     event SponsorshipAgreementCreated(
+        uint256 eventId,
         address[] sponsors,
         uint256[] contributions,
         uint256[] revenueShares,
@@ -42,50 +46,52 @@ contract SponsorAgreement is ReentrancyGuard {
     }
 
     constructor(
-        address[] memory _sponsors,
-        uint256[] memory _contributions,
-        uint256[] memory _revenueShares,
-        uint256[] memory _eventIds,
+        EventManagerFactory.SponsorInfo memory sponsorInfo,
+        uint256 _eventId,
         address _organizer
     ) {
         require(
-            _sponsors.length == _contributions.length,
+            sponsorInfo.sponsors.length ==
+                sponsorInfo.sponsorContributions.length,
             "Mismatched sponsors and contributions"
         );
         require(
-            _sponsors.length == _revenueShares.length,
+            sponsorInfo.sponsors.length ==
+                sponsorInfo.sponsorRevenueShares.length,
             "Mismatched sponsors and revenue shares"
         );
-        require(
-            _sponsors.length == _eventIds.length,
-            "Mismatched sponsors and event IDs"
-        ); // New check
 
-        for (uint256 i = 0; i < _sponsors.length; i++) {
-            sponsors[_sponsors[i]] = Sponsor(
-                _contributions[i],
-                _revenueShares[i],
+        eventId = _eventId;
+        organizer = _organizer;
+
+        for (uint256 i = 0; i < sponsorInfo.sponsors.length; i++) {
+            sponsors[sponsorInfo.sponsors[i]] = Sponsor(
+                sponsorInfo.sponsorContributions[i],
+                sponsorInfo.sponsorRevenueShares[i],
                 false,
-                _eventIds[i]
-            ); // Updated
-            sponsorAddresses.push(_sponsors[i]);
-            totalContributions += _contributions[i];
-            totalRevenueShares += _revenueShares[i];
+                true, // Sponsor is active by default
+                eventId
+            );
+            totalContributions += sponsorInfo.sponsorContributions[i];
+            totalRevenueShares += sponsorInfo.sponsorRevenueShares[i];
         }
 
-        organizer = _organizer;
         emit SponsorshipAgreementCreated(
-            _sponsors,
-            _contributions,
-            _revenueShares,
-            _organizer
+            eventId,
+            sponsorInfo.sponsors,
+            sponsorInfo.sponsorContributions,
+            sponsorInfo.sponsorRevenueShares,
+            organizer
         );
     }
 
     function contribute() external payable nonReentrant {
         require(!isTerminated, "Sponsorship has been terminated");
         Sponsor storage sponsor = sponsors[msg.sender];
-        require(sponsor.contribution > 0, "Not a valid sponsor");
+        require(
+            sponsor.contribution > 0 && sponsor.active,
+            "Not a valid sponsor"
+        );
         require(
             msg.value == sponsor.contribution,
             "Contribution amount mismatch"
@@ -94,66 +100,37 @@ contract SponsorAgreement is ReentrancyGuard {
         emit ContributionReceived(msg.sender, msg.value);
     }
 
-    function distributeRevenue(
-        uint256 totalRevenue
-    ) external onlyOrganizer nonReentrant {
-        require(!isTerminated, "Sponsorship has been terminated");
-        require(totalRevenue > 0, "Revenue must be greater than zero");
-
-        for (uint256 i = 0; i < sponsorAddresses.length; i++) {
-            address sponsorAddress = sponsorAddresses[i];
-            Sponsor storage sponsor = sponsors[sponsorAddress];
-
-            if (!sponsor.paid) {
-                uint256 sponsorRevenue = (totalRevenue * sponsor.revenueShare) /
-                    totalRevenueShares;
-                (bool success, ) = sponsorAddress.call{value: sponsorRevenue}(
-                    ""
-                );
-                require(success, "Revenue transfer failed");
-                sponsor.paid = true;
-            }
-        }
-
-        emit RevenueDistributed(totalRevenue);
-    }
-
-    function issueSponsorshipNFT(
-        address sponsor,
-        uint256 tokenId
-    ) external onlyOrganizer {
-        require(!isTerminated, "Sponsorship has been terminated");
-        Sponsor memory s = sponsors[sponsor];
-        require(s.contribution > 0, "Invalid sponsor");
-
-        // Logic to mint or assign NFT (could be an external ERC721 contract)
-        emit SponsorshipNFTIssued(sponsor, tokenId);
-    }
+    //IssueNFTToSponsor Not Implemented
 
     function terminateSponsorship(
         address sponsor
     ) external onlyOrganizer nonReentrant {
         require(!isTerminated, "Sponsorship has already been terminated");
-        Sponsor memory s = sponsors[sponsor];
-        require(s.contribution > 0, "Invalid sponsor");
+        Sponsor storage s = sponsors[sponsor];
+        require(s.contribution > 0 && s.active, "Invalid sponsor");
 
         // Refund contribution
         (bool success, ) = sponsor.call{value: s.contribution}("");
         require(success, "Refund transfer failed");
 
+        s.active = false; // Mark the sponsor as inactive
         emit SponsorshipTerminated(sponsor, s.contribution);
-        delete sponsors[sponsor];
     }
 
-    function withdrawContribution() external nonReentrant {
-        require(isTerminated, "Sponsorship is still active");
-        Sponsor storage sponsor = sponsors[msg.sender];
-        require(sponsor.contribution > 0, "No contribution to withdraw");
+    //distributeRevenue() //This function will be triggered when sharing ticket revenue.
 
-        uint256 amount = sponsor.contribution;
-        sponsor.contribution = 0; // Reset contribution to prevent re-entrancy
+    //Only Organizer Should Withdraw Total Contribution
+    function withdrawContribution(
+        uint256 _amount
+    ) external payable onlyOrganizer nonReentrant {
+        if (_amount <= 0) {
+            revert Error.ZeroValueNotAllowed();
+        }
+        if (_amount > totalContributions) {
+            revert Error.InsufficientFunds();
+        }
 
-        (bool success, ) = msg.sender.call{value: amount}("");
+        (bool success, ) = organizer.call{value: _amount}("");
         require(success, "Withdrawal failed");
     }
 
@@ -166,10 +143,11 @@ contract SponsorAgreement is ReentrancyGuard {
             uint256 contribution,
             uint256 revenueShare,
             bool paid,
-            uint256 eventId // Updated return values
+            bool active, // Added active status to returned values
+            uint256 event_Id
         )
     {
         Sponsor memory s = sponsors[sponsor];
-        return (s.contribution, s.revenueShare, s.paid, s.eventId);
+        return (s.contribution, s.revenueShare, s.paid, s.active, s.eventId);
     }
 }
