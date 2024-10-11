@@ -13,6 +13,7 @@ contract VendorAgreement {
         bool confirmServiceDelivery;
         bool paid;
         bool isActive;
+        bool isTerminated;
     }
 
     address public organizer;
@@ -50,6 +51,11 @@ contract VendorAgreement {
         uint indexed payment
     );
 
+    event VendorAgreementTerminated(
+        address indexed vendorAddress,
+        uint eventId
+    );
+
     //Implement OnlyOrganizer Modifier
     modifier onlyOrganizer {
         require(msg.sender == organizer, "Only event organizer can perform this operation");
@@ -59,6 +65,8 @@ contract VendorAgreement {
     //The Organizer deposits money to the contract agreement which will be in escrow for payment when the agreement is fulfilled
     function fundAgreement(address vendorAddress) external payable {
         Vendor memory vendorDetails = vendor[vendorAddress]; 
+        // check if vendor contract has been terminated before sending funds
+        require(vendorDetails.isTerminated == false, "Vendor contract has been terminated");
         uint vendorPaymentAmount = vendorDetails.vendorPayment;
         // checks for vendor payment details
         require(vendorPaymentAmount > 0, "Vendor not found");
@@ -85,7 +93,8 @@ contract VendorAgreement {
             _vendorPayment,
             false,
             false,
-            true 
+            true,
+            false
         );
 
         vendor[_vendorAddress] = vendorDetails; 
@@ -109,6 +118,7 @@ contract VendorAgreement {
         Vendor memory vendorDetails = vendor[_vendorAddress];
 
         require(vendorDetails.confirmServiceDelivery, "Confirm service delivery first");
+        require(vendorDetails.isTerminated == false, "Vendor contract has been terminated");
 
         uint vendorPaymentAmount = vendorDetails.vendorPayment;
 
@@ -128,9 +138,14 @@ contract VendorAgreement {
         //Implement onlyArbitrator modifier for dispute
     }
 
-    function terminateAgreement() external {
+    function terminateAgreement(address _vendorAddress) external onlyOrganizer {
         //onlyOrganizer Implementation
         //Only Organizer terminates contract and the organizer money is refunded automatically.
+        require(_vendorAddress != address(0), "Invalid address");
+
+        vendor[_vendorAddress].isTerminated = true;
+
+        emit VendorAgreementTerminated(_vendorAddress, eventId);
     }
 
     function getVendorDetails()
