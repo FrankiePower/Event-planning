@@ -26,18 +26,35 @@ contract VendorAgreement {
         organizer = _organizer;
     }
 
+    // Events
+    event fundAgreementSuccessful(
+        address indexed vendor,
+        address indexed organizer,
+        uint indexed amount
+    );
+
     //Implement OnlyOrganizer Modifier
     modifier onlyOrganizer {
         require(msg.sender == organizer, "Only event organizer can perform this operation");
     }
 
     //The Organizer deposits money to the contract agreement which will be in escrow for payment when the agreement is fulfilled
-    function fundAgreement() external payable {
-        require()
+    function fundAgreement(address vendorAddress) external payable {
+        Vendor memory vendorDetails = vendor[vendorAddress]; 
+        uint vendorPaymentAmount = vendorDetails.vendorPayment;
+        // checks for vendor payment details
+        require(vendorPaymentAmount > 0, "Vendor not found")
+
+        (bool success,) = organizer.call{value: vendorPaymentAmount}("");
+        require(success, "Could not fund for vendor services");
+
+        emit fundAgreementSuccessful(vendorAddress, organizer, vendorPaymentAmount);
     }
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
-    function createVendorAgreement() external payable {}
+    function createVendorAgreement() external payable {
+        
+    }
 
     function confirmServiceDelivered() external {
         //This function should have onlyOrganizer Modifier.
