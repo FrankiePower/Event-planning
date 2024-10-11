@@ -56,6 +56,8 @@ contract VendorAgreement {
         uint eventId
     );
 
+    
+
     //Implement OnlyOrganizer Modifier
     modifier onlyOrganizer {
         require(msg.sender == organizer, "Only event organizer can perform this operation");
@@ -105,6 +107,7 @@ contract VendorAgreement {
     function confirmServiceDelivered(address _vendorAddress) external onlyOrganizer {
         //This function should have onlyOrganizer Modifier.
         require(_vendorAddress != address(0), "Invalid vendor address");
+        require(vendor[_vendorAddress].isTerminated == false, "Vendor contract terminated");
 
         vendor[_vendorAddress].confirmServiceDelivery = true;
 
@@ -145,12 +148,24 @@ contract VendorAgreement {
 
         vendor[_vendorAddress].isTerminated = true;
 
+        uint vendorPaymentAmount = vendor[_vendorAddress].vendorPayment;
+
+        require(vendorPaymentAmount > 0, "Insufficient funds to transfer");
+
+        (bool success, ) = organizer.call{ value: vendorPaymentAmount }("");
+
         emit VendorAgreementTerminated(_vendorAddress, eventId);
     }
 
-    function getVendorDetails()
+    function getVendorDetails(address _vendorAddress)
         external
         view
-        returns (address, uint256, string memory, bool)
-    {}
+        returns (Vendor memory)
+    {
+        require(_vendorAddress != address(0), "Invalid vendor address");
+
+        // returning the whole vendor struct to be unpacked on the frontend
+        Vendor memory vendor = vendor[_vendorAddress];
+
+    }
 }
