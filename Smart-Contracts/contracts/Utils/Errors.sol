@@ -29,4 +29,5 @@ library Error {
     error NoAvailableTierForTier();
     error IncorrectPaymentAmount();
     error AllTicketSoldOut();
+    error InsufficientFunds();
 }
