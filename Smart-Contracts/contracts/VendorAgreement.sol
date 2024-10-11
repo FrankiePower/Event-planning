@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import "./EventManagerFactory.sol";
+
 contract VendorAgreement {
     constructor(
-        address[] memory _vendors,
-        uint256[] memory _vendorPayments,
-        string[] memory _vendorServices,
-        address _organizer //The address of the event organizer.
+        uint256 eventId,
+        EventManagerFactory.VendorInfo memory vendorInfo,
+        address _organizer
     ) {}
 
     //Implement OnlyOrganizer Modifier

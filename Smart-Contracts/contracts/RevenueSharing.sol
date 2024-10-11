@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.21;
 
+import "./EventManagerFactory.sol";
+
 contract RevenueSharing {
-    constructor() {}
+    constructor(EventManagerFactory.RevenueInfo memory revenueInfo, address organizer) {}
 
     function distributeRevenue(uint256 totalRevenue) external {
         //onlyOrganizer

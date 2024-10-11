@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.21;
 
+import "./EventManagerFactory.sol";
+
 contract SponsorAgreement {
     constructor(
-        address[] memory _sponsors,
-        uint256[] memory _contributions,
-        uint256[] memory _revenueShares,
+        EventManagerFactory.SponsorInfo memory sponsorInfo,
         address _organizer
     ) {}
 
@@ -38,7 +38,5 @@ contract SponsorAgreement {
         public
         view
         returns (uint256 contribution, uint256 revenueShare, bool paid)
-    {
-        
-    }
+    {}
 }
