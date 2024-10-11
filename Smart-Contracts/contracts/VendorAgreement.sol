@@ -2,21 +2,23 @@
 pragma solidity ^0.8.21;
 
 import "./EventManagerFactory.sol";
+import "./Utils/Errors.sol";
 
 contract VendorAgreement {
 
     struct Vendor {
-        uint eventId;
+        uint event_Id;
         string vendorService;
         uint vendorPayment;
         bool confirmServiceDelivery;
         bool paid;
-        bool vendorStatus;
+        bool isActive;
     }
 
     address public organizer;
     uint public eventId;
     mapping(address => Vendor) public vendor;
+
         constructor(
         uint256 _eventId,
         EventManagerFactory.VendorInfo memory vendorInfo,
@@ -33,9 +35,15 @@ contract VendorAgreement {
         uint indexed amount
     );
 
+    event VendorCreatedSuccessfully(
+        address indexed vendorAddress,
+        uint indexed eventId
+    );
+
     //Implement OnlyOrganizer Modifier
     modifier onlyOrganizer {
         require(msg.sender == organizer, "Only event organizer can perform this operation");
+        _;
     }
 
     //The Organizer deposits money to the contract agreement which will be in escrow for payment when the agreement is fulfilled
@@ -43,21 +51,43 @@ contract VendorAgreement {
         Vendor memory vendorDetails = vendor[vendorAddress]; 
         uint vendorPaymentAmount = vendorDetails.vendorPayment;
         // checks for vendor payment details
-        require(vendorPaymentAmount > 0, "Vendor not found")
+        require(vendorPaymentAmount > 0, "Vendor not found");
 
-        (bool success,) = organizer.call{value: vendorPaymentAmount}("");
+        (bool success, ) = organizer.call{value: vendorPaymentAmount}("");
         require(success, "Could not fund for vendor services");
 
         emit fundAgreementSuccessful(vendorAddress, organizer, vendorPaymentAmount);
     }
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
-    function createVendorAgreement() external payable {
-        
+    function createVendorAgreement(
+        string memory _vendorService,
+        uint _vendorPayment,
+        address _vendorAddress
+    ) external payable {
+        if(_vendorPayment <= 0) {
+            revert Error.InvalidVendorPayment();
+        }
+
+        Vendor memory vendorDetails = Vendor(
+             eventId,
+            _vendorService,
+            _vendorPayment,
+            false,
+            false,
+            true 
+        );
+
+        vendor[_vendorAddress] = vendorDetails; 
+
+        emit VendorCreatedSuccessfully(_vendorAddress, eventId);
     }
 
-    function confirmServiceDelivered() external {
+    function confirmServiceDelivered(address vendorAddress) external onlyOrganizer {
         //This function should have onlyOrganizer Modifier.
+        require(vendorAddress != address(0), "Invalid vendor address");
+
+        vendor[vendorAddress].confirmServiceDelivery = true;
     }
 
     function releasePayment() external {
