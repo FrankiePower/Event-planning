@@ -40,6 +40,16 @@ contract VendorAgreement {
         uint indexed eventId
     );
 
+    event ServiceDeliveryConfirmed(
+        address indexed vendorAddress,
+        address indexed organizer
+    );
+
+    event VendorPaidSuccessfully(
+        address indexed vendorAddress,
+        uint indexed payment
+    );
+
     //Implement OnlyOrganizer Modifier
     modifier onlyOrganizer {
         require(msg.sender == organizer, "Only event organizer can perform this operation");
@@ -83,15 +93,35 @@ contract VendorAgreement {
         emit VendorCreatedSuccessfully(_vendorAddress, eventId);
     }
 
-    function confirmServiceDelivered(address vendorAddress) external onlyOrganizer {
+    function confirmServiceDelivered(address _vendorAddress) external onlyOrganizer {
         //This function should have onlyOrganizer Modifier.
-        require(vendorAddress != address(0), "Invalid vendor address");
+        require(_vendorAddress != address(0), "Invalid vendor address");
 
-        vendor[vendorAddress].confirmServiceDelivery = true;
+        vendor[_vendorAddress].confirmServiceDelivery = true;
+
+        emit ServiceDeliveryConfirmed(_vendorAddress, organizer);
     }
 
-    function releasePayment() external {
+    function releasePayment(address _vendorAddress) external {
         //The payment is released only if the confirmServiceDelivered function has been called and the service is confirmed.
+        require(_vendorAddress != address(0), "Invalid vendor address");
+
+        Vendor memory vendorDetails = vendor[_vendorAddress];
+
+        require(vendorDetails.confirmServiceDelivery, "Confirm service delivery first");
+
+        uint vendorPaymentAmount = vendorDetails.vendorPayment;
+
+        // avoid multiple disbursement of funds to same vendor
+        require(vendorDetails.paid == false, "Cannot disburse funds to vendor twice");
+
+        vendorDetails.paid = true;
+        (bool success, ) = _vendorAddress.call{ value: vendorPaymentAmount }("");
+        require(success, "Could not release vendor payment");
+
+        emit VendorPaidSuccessfully(_vendorAddress, vendorPaymentAmount);
+
+
     }
 
     function resolveDispute(bool decisionForVendor) external {
