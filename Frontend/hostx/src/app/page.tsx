@@ -5,7 +5,6 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="hscreen sm:p-8 gap-16 px-4 sm:pt-16 sm:px-6 font-[family-name:var(--font-geist-sans)] text-white">
-      
       <h1 className="text-5xl sm:text-9xl text-stone-200 font-bold text-left fontmono tracking-tighter mt-6 sm:mt-0">
         hostX.
       </h1>
@@ -84,17 +83,22 @@ export default function Home() {
       <div className="p-6 bg-stone-700/30 rounded-3xl h-full mt-6 sm:hidden">
         <div className="flex flex-col justify-between items-start h-full">
           <p className="text-xl font-light">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Error temporibus, obcaecati sed vero nobis velit.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Error
+            temporibus, obcaecati sed vero nobis velit.
           </p>
 
           <div className="flex items-center justify-between mt-5 w-full">
             <div className="inline-flex items-center gap-3">
-              <Link href={'/'} className="underline underline-offset-4">Privacy</Link>
-              <Link href={'/'} className="underline underline-offset-4">Terms</Link>
+              <Link href={"/"} className="underline underline-offset-4">
+                Privacy
+              </Link>
+              <Link href={"/"} className="underline underline-offset-4">
+                Terms
+              </Link>
             </div>
             <Link
               className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-              href="/"
+              href="/create"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -105,23 +109,26 @@ export default function Home() {
       </div>
 
       <div className="scrollbar-hide my-10 sm:mt-14 sm:mb-0 flex w-full snap-x snap-mandatory scroll-px-10 gap-5 overflow-x-scroll scroll-smooth px0">
-
         <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
           <div className="p-6 bg-stone-700/30 rounded-3xl h-full">
             <div className="flex flex-col justify-between items-start h-full">
               <p className="text-xl font-light">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Error temporibus, obcaecati sed vero nobis velit.
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Error
+                temporibus, obcaecati sed vero nobis velit.
               </p>
 
               <div className="flex items-center justify-between mt-5 w-full">
                 <div className="inline-flex items-center gap-3">
-                  <Link href={'/'} className="underline underline-offset-4">Privacy</Link>
-                  <Link href={'/'} className="underline underline-offset-4">Terms</Link>
+                  <Link href={"/"} className="underline underline-offset-4">
+                    Privacy
+                  </Link>
+                  <Link href={"/"} className="underline underline-offset-4">
+                    Terms
+                  </Link>
                 </div>
                 <Link
                   className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                  href="/"
-                  target="_blank"
+                  href="/create"
                   rel="noopener noreferrer"
                 >
                   Create An Event
@@ -134,7 +141,11 @@ export default function Home() {
         <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl bg-green-100 sm:w-[44%] md:w-[30%]">
           <div className="rounded-3xl h-full">
             <div className="h-full relative">
-              <img src="/flow-bubble.webp" alt="logo" className="objectfill h-full rounded-3xl" />
+              <img
+                src="/flow-bubble.webp"
+                alt="logo"
+                className="objectfill h-full rounded-3xl"
+              />
 
               <div className="p-4 sm:p-6 flex flex-col justify-between items-start h-full w-full absolute bg-stone-600/40 rounded-3xl top-0 left-0 text-stone-800">
                 <p className="text-3xl sm:text-5xl font-semibold">
@@ -159,12 +170,13 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl bg-green-100 sm:w-[44%] md:w-[30%]">
           <div className="p-4 sm:p-6 bg-[#017dda] rounded-3xl h-full">
             <div className="flex flex-col justify-between items-start h-full">
               <p className="text-xl font-medium">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Error temporibus, obcaecati sed vero nobis velit.
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Error
+                temporibus, obcaecati sed vero nobis velit.
               </p>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-5 w-full gap-5 sm:gap-0">
@@ -173,9 +185,7 @@ export default function Home() {
                   <p className="text-md font-semibold">Mihails Rizakovs</p>
                 </div>
 
-                
                 <RegisterButton />
-
               </div>
             </div>
           </div>
@@ -185,13 +195,18 @@ export default function Home() {
           <div className="p-4 sm:p-6 bg-stone-700/30 rounded-3xl h-full">
             <div className="flex flex-col justify-between items-start h-full">
               <p className="text-xl font-light">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Error temporibus, obcaecati sed vero nobis velit.
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Error
+                temporibus, obcaecati sed vero nobis velit.
               </p>
 
               <div className="flex items-center justify-between mt-5 w-full">
                 <div className="inline-flex items-center gap-3">
-                  <Link href={'/'} className="underline underline-offset-4">Privacy</Link>
-                  <Link href={'/'} className="underline underline-offset-4">Terms</Link>
+                  <Link href={"/"} className="underline underline-offset-4">
+                    Privacy
+                  </Link>
+                  <Link href={"/"} className="underline underline-offset-4">
+                    Terms
+                  </Link>
                 </div>
                 <Link
                   className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
@@ -209,7 +224,11 @@ export default function Home() {
         <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl bg-green-100 sm:w-[44%] md:w-[30%]">
           <div className="rounded-3xl h-full">
             <div className="h-full relative">
-              <img src="/flow-bubble.webp" alt="logo" className="objectfill h-full rounded-3xl" />
+              <img
+                src="/flow-bubble.webp"
+                alt="logo"
+                className="objectfill h-full rounded-3xl"
+              />
               <div className="p-4 sm:p-6 flex flex-col justify-between items-start h-full w-full absolute bg-stone-600/40 rounded-3xl top-0 left-0 text-stone-800">
                 <p className="text-3xl sm:text-5xl font-semibold">
                   Web3Lasgos Conference
@@ -233,9 +252,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-
       </div>
-      
+
       {/* <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
