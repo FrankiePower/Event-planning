@@ -30,4 +30,5 @@ library Error {
     error IncorrectPaymentAmount();
     error AllTicketSoldOut();
     error InsufficientFunds();
+    error InvalidVendorPayment();
 }
