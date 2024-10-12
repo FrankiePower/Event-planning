@@ -27,6 +27,10 @@ contract VendorAgreement {
     ) {
         eventId = _eventId;
         organizer = _organizer;
+
+        require(vendorInfo.vendors.length == vendorInfo.vendorPayments.length, "Inconsistent vendor data");
+        require(vendorInfo.vendors.length == vendorInfo.vendorServices.length, "Inconsistent vendor data");
+        
     }
 
     // Events
