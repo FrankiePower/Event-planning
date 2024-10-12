@@ -1,21 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-contract VendorAgreement {
-    constructor(
-        address[] memory _vendors,
-        uint256[] memory _vendorPayments,
-        string[] memory _vendorServices,
-        address _organizer //The address of the event organizer.
-    ) {}
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-    //Implement OnlyOrganizer Modifier
+contract VendorAgreement is ReentrancyGuard {
+    // State variables
+    address public organizer;
+    address public vendor;
+    address public arbitrator;
+    uint256 public totalPaymentRequired;
+    bool public agreementFunded;
+    address public escrowAddress;
 
-    //The Organizer deposits money to the contract agreement which will be in escrow for payment when the agreement is fulfilled
-    function fundAgreement() external payable {}
+    mapping(address => bool) public isVendor;
+    mapping(address => uint256) public vendorPayments;
+    mapping(address => string) public vendorServices;
+    mapping(address => bool) public serviceDelivered;
+
+    address[] public vendorList;
+
+
+
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
-    function createVendorAgreement() external payable {}
+    
 
     function confirmServiceDelivered() external {
         //This function should have onlyOrganizer Modifier.
