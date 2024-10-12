@@ -107,6 +107,11 @@ contract VendorAgreement is ReentrancyGuard {
         emit AgreementFunded(msg.value);
     }
 
+    function setEscrowAddress(address _escrowAddress) external onlyOrganizer {
+    require(_escrowAddress != address(0), "Invalid escrow address");
+    escrowAddress = _escrowAddress;
+}
+
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
     
