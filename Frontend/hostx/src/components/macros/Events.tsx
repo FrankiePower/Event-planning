@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React from "react";
+import React, { act } from "react";
 import { Timeline } from "@/components/ui/timeline";
 import { EventItem } from "../micros/EventCard";
 import {
@@ -10,6 +10,7 @@ import {
     IconFileBroken,
     IconSignature,
     IconTableColumn,
+    IconLocation
 } from "@tabler/icons-react";
 
 const Skeleton = () => (
@@ -21,26 +22,24 @@ const items = [
         title: "The Dawn of Innovation",
         description: "Explore the birth of groundbreaking ideas and inventions.",
         header: <Skeleton />,
-        icon: <IconClipboardCopy className="h-4 w-4 text-neutral-500" />,
+        active: true,
     },
     {
         title: "The Digital Revolution",
         description: "Dive into the transformative power of technology.",
         header: <Skeleton />,
-        icon: <IconFileBroken className="h-4 w-4 text-neutral-500" />,
+        active: true,
     },
     {
         title: "The Art of Design",
         description: "Discover the beauty of thoughtful and functional design.",
         header: <Skeleton />,
-        icon: <IconSignature className="h-4 w-4 text-neutral-500" />,
     },
     {
         title: "The Power of Communication",
         description:
             "Understand the impact of effective communication in our lives.",
         header: <Skeleton />,
-        icon: <IconTableColumn className="h-4 w-4 text-neutral-500" />,
     },
 ];
 export function Events() {
@@ -50,8 +49,8 @@ export function Events() {
             content: (
                 <div>
                     <div className="grid grid-cols-2 gap-4">
-                        <EventItem title={items[0].title} description={items[0].description} icon={items[0].icon} header={items[0].header} />
-                        <EventItem title={items[1].title} description={items[1].description} icon={items[1].icon} header={items[1].header} />
+                        <EventItem title={items[0].title} description={items[0].description} header={items[0].header} active={items[0].active} />
+                        <EventItem title={items[1].title} description={items[1].description} header={items[1].header} active={items[1].active} />
                     </div>
                 </div>
             ),
@@ -61,10 +60,10 @@ export function Events() {
             content: (
                 <div>
                     <div className="grid grid-cols-2 gap-4">
-                        <EventItem title={items[0].title} description={items[0].description} icon={items[0].icon} header={items[0].header} />
-                        <EventItem title={items[1].title} description={items[1].description} icon={items[1].icon} header={items[1].header} />
-                        <EventItem title={items[1].title} description={items[1].description} icon={items[1].icon} header={items[1].header} />
-                        <EventItem title={items[0].title} description={items[0].description} icon={items[0].icon} header={items[0].header} />
+                        <EventItem title={items[0].title} description={items[0].description} header={items[0].header} />
+                        <EventItem title={items[1].title} description={items[1].description} header={items[1].header} />
+                        <EventItem title={items[1].title} description={items[1].description} header={items[1].header} />
+                        <EventItem title={items[0].title} description={items[0].description} header={items[0].header} />
                     </div>
                 </div>
             ),
@@ -74,8 +73,8 @@ export function Events() {
             content: (
                 <div>
                     <div className="grid grid-cols-2 gap-4">
-                        <EventItem title={items[0].title} description={items[0].description} icon={items[0].icon} header={items[0].header} />
-                        <EventItem title={items[1].title} description={items[1].description} icon={items[1].icon} header={items[1].header} />
+                        <EventItem title={items[0].title} description={items[0].description} header={items[0].header} />
+                        <EventItem title={items[1].title} description={items[1].description} header={items[1].header} />
                     </div>
                 </div>
             ),

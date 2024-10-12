@@ -14,11 +14,13 @@ export default function BackgroundWrapper({
 
   switch (pathname) {
     case '/events':
-      landingGradient = "from-red-600/90 via-red-800 to-red-950";
+      landingGradient = "from-gray-700 via-gray-800 to-gray-950";
       break;
     default:
       landingGradient = "from-stone-600/90 via-stone-800 to-stone-950";
   }
+  // landingGradient = "from-amber-950/90 via-amber-900 to-orange-950";
+  // 
 
   return (
     <div className={`bg-gradient-to-b ${landingGradient} min-h-screen`}>

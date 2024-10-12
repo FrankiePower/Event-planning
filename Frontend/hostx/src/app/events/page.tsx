@@ -1,8 +1,10 @@
-import React from 'react'
+import { Events } from '@/components/macros/Events'
 
 const Page = () => {
     return (
-        <div>Page</div>
+        <>
+            <Events />
+        </>
     )
 }
 
