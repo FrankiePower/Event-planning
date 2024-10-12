@@ -38,7 +38,39 @@ contract VendorAgreement is ReentrancyGuard {
     event DisputeResolved(address vendor, bool decisionForVendor);
     event AgreementTerminated();
 
-   
+    // Modifiers
+    modifier onlyOrganizer() {
+        require(msg.sender == organizer, "Only organizer can call this function");
+        _;
+    }
+
+    modifier onlyVendor() {
+        require(isVendor[msg.sender], "Only vendors can call this function");
+        _;
+    }
+
+    modifier onlyArbitrator() {
+        require(msg.sender == arbitrator, "Only arbitrator can call this function");
+        _;
+    }
+
+    modifier requireStatus(AgreementStatus _status) {
+        require(status == _status, "Invalid agreement status for this operation");
+        _;
+    }
+
+    constructor(address _organizer, address _vendor, address _arbitrator) {
+        require(_organizer != address(0), "Invalid organizer address");
+        require(_vendor != address(0), "Invalid vendors address");
+        require(_arbitrator != address(0), "Invalid arbitrator address");
+        organizer = _organizer;
+        vendor = _vendor;
+        arbitrator = _arbitrator;
+        status = AgreementStatus.NotCreated;
+    }
+
+    
+
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
     
