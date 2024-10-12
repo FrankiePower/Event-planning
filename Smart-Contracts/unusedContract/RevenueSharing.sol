@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
+import "./EventManagerFactory.sol";
+import "./Ticket.sol";
 
 contract RevenueSharing {
     address public organizer;
@@ -16,7 +18,10 @@ contract RevenueSharing {
     address[] public stakeholderAddresses;
 
     modifier onlyOrganizer() {
-        require(msg.sender == organizer, "Only organizer can call this function.");
+        require(
+            msg.sender == organizer,
+            "Only organizer can call this function."
+        );
         _;
     }
 
@@ -26,23 +31,31 @@ contract RevenueSharing {
     }
 
     constructor(
-        address[] memory _stakeholders,
-        uint256[] memory _shares,
+        // address[] memory _stakeholders,
+        // uint256[] memory _shares,
+        EventManagerFactory.RevenueInfo revenueInfo,
         address _organizer,
         address _ticketContractAddress
     ) {
-        require(_stakeholders.length == _shares.length, "Stakeholder data mismatch.");
+        require(
+            revenueInfo.stakeholders.length ==
+                revenueInfo.sharingPercentage.length,
+            "Stakeholder data mismatch."
+        );
         organizer = _organizer;
         ticketContractAddress = _ticketContractAddress;
 
-        for (uint256 i = 0; i < _stakeholders.length; i++) {
-            require(_shares[i] > 0 && _shares[i] <= 100, "Invalid share percentage.");
-            stakeholders[_stakeholders[i]] = Stakeholder({
-                share: _shares[i],
+        for (uint256 i = 0; i < revenueInfo.stakeholders.length; i++) {
+            require(
+                revenueInfo.sharingPercentage[i] > 0 && revenueInfo.sharingPercentage[i] <= 100,
+                "Invalid share percentage."
+            );
+            stakeholders[revenueInfo.stakeholders[i]] = Stakeholder({
+                share: revenueInfo.stakeholders[i],
                 amountReceived: 0,
                 isPaid: false
             });
-            stakeholderAddresses.push(_stakeholders[i]);
+            stakeholderAddresses.push(revenueInfo.stakeholders[i]);
         }
     }
 
@@ -72,16 +85,13 @@ contract RevenueSharing {
     }
 
     // Retrieves stakeholder details (share percentage, amount received, and if they've been paid)
-    function getStakeholderDetails(address stakeholder)
-        public
-        view
-        returns (uint256 share, uint256 amountReceived, bool isPaid)
-    {
+    function getStakeholderDetails(
+        address stakeholder
+    ) public view returns (uint256 share, uint256 amountReceived, bool isPaid) {
         Stakeholder memory s = stakeholders[stakeholder];
         return (s.share, s.amountReceived, s.isPaid);
     }
 
-    // Finalizes the event, preventing any further payments
     function finalizeEvent() external onlyOrganizer eventNotFinalized {
         eventFinalized = true;
     }

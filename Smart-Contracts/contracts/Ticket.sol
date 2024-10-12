@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import "./Utils/Errors.sol";
 import "./EventManagerFactory.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
@@ -10,9 +11,22 @@ contract Ticket is ERC721, ERC721URIStorage {
     address public organizer;
     uint256 public totalTickets;
     uint256 public totalTicketsSold;
-    uint256 public eventId;
+    uint32 public eventId;
     TicketTier[] public ticketTiers; // Array of ticket tiers
+    uint public ticketTierCount;
     bool public isEventTerminated;
+    bool public eventFinalized;
+    uint public stakeholdersCount;
+    address[] public stakeholderAddresses;
+    uint totalEtherRevenue;
+    uint totalTokenRevenue;
+
+    IERC20 public token;
+
+    enum PaymentMethod {
+        Ether,
+        ERC20TOKEN
+    }
 
     struct TicketInfo {
         string[] tierNames;
@@ -35,11 +49,18 @@ contract Ticket is ERC721, ERC721URIStorage {
         uint256 amountPaid;
         uint256 ticketId;
         bool hasClaimedRefund;
+        PaymentMethod paidWith;
+    }
+    struct Stakeholder {
+        uint256 share;
+        uint256 amountReceived;
+        bool isPaid;
     }
 
     // Mappings
     mapping(address => Attendee) public attendees;
     mapping(uint256 => Attendee[]) public eventToAttendees;
+    mapping(address => Stakeholder) public stakeholders;
 
     event TicketPurchased(
         address indexed attendee,
@@ -48,23 +69,31 @@ contract Ticket is ERC721, ERC721URIStorage {
     );
 
     constructor(
-        uint256 _eventId,
+        uint32 _eventId,
         uint256 _totalTickets,
         EventManagerFactory.TicketInfo memory ticketInfo,
-        address _organizer
+        EventManagerFactory.RevenueInfo memory revenueInfo,
+        address _organizer,
+        address _paymentTokenAddress
     ) ERC721("HostX", "HTX") {
         organizer = _organizer;
         eventId = _eventId;
         totalTickets = _totalTickets;
+        token = IERC20(_paymentTokenAddress);
 
-        // Check that all tier-related data is consistent
+        ticketTierCount = ticketInfo.tierNames.length;
+
         require(
-            ticketInfo.tierNames.length == ticketInfo.tierPrices.length &&
-                ticketInfo.tierNames.length ==
-                ticketInfo.tierAvailability.length &&
-                ticketInfo.tierNames.length ==
-                ticketInfo.ticketTierIpfshash.length,
+            ticketTierCount == ticketInfo.tierPrices.length &&
+                ticketTierCount == ticketInfo.tierAvailability.length &&
+                ticketTierCount == ticketInfo.ticketTierIpfshash.length,
             "Tier data length mismatch"
+        );
+        stakeholdersCount = revenueInfo.stakeholders.length;
+
+        require(
+            stakeholdersCount == revenueInfo.sharingPercentage.length,
+            "Stakeholder data mismatch."
         );
 
         // Initialize each ticket tier
@@ -79,6 +108,24 @@ contract Ticket is ERC721, ERC721URIStorage {
                     ticketsSold: 0
                 })
             );
+        }
+
+        for (uint256 i = 0; i < stakeholdersCount; i++) {
+            uint256 sharePercentage = revenueInfo.sharingPercentage[i];
+
+            require(
+                sharePercentage > 0 && sharePercentage <= 100,
+                "Invalid share percentage."
+            );
+
+            address stakeholderAddress = revenueInfo.stakeholders[i];
+            stakeholders[stakeholderAddress] = Stakeholder({
+                share: sharePercentage,
+                amountReceived: 0,
+                isPaid: false
+            });
+
+            stakeholderAddresses.push(stakeholderAddress);
         }
     }
 
@@ -106,7 +153,16 @@ contract Ticket is ERC721, ERC721URIStorage {
         _;
     }
 
-    function buyTicket(uint256 tierIndex) external payable {
+    modifier eventNotFinalized() {
+        require(!eventFinalized, "Event has been finalized.");
+        _;
+    }
+
+    function buyTicket(
+        uint256 tierIndex,
+        uint256 tokenAmount
+    ) external payable {
+        uint amountPaid;
         if (msg.sender == address(0)) {
             revert Error.ZeroAddressDetected();
         }
@@ -117,11 +173,37 @@ contract Ticket is ERC721, ERC721URIStorage {
         if (tier.ticketsSold >= tier.totalAvailable) {
             revert Error.NoAvailableTierForTier();
         }
-        if (msg.value != tier.price) {
-            revert Error.IncorrectPaymentAmount();
-        }
         if (totalTicketsSold >= totalTickets) {
             revert Error.AllTicketSoldOut();
+        }
+        PaymentMethod method = PaymentMethod.Ether;
+        // If the user wants to pay with Ether
+        if (msg.value > 0) {
+            if (msg.value != tier.price) {
+                revert Error.IncorrectPaymentAmount();
+            }
+            // Increase revenue by Ether value
+            amountPaid = msg.value;
+            totalEtherRevenue += msg.value;
+        }
+        // If the user wants to pay with ERC-20 tokens
+        else if (tokenAmount > 0) {
+            method = PaymentMethod.ERC20TOKEN;
+            if (tokenAmount != tier.price) {
+                revert Error.IncorrectPaymentAmount();
+            }
+            bool success = token.transferFrom(
+                msg.sender,
+                address(this),
+                tokenAmount
+            );
+            if (!success) {
+                revert Error.TokenTransferFailed();
+            }
+            totalTokenRevenue += tokenAmount;
+            amountPaid = tokenAmount;
+        } else {
+            revert Error.IncorrectPaymentAmount(); // Neither Ether nor tokens provided
         }
 
         tier.ticketsSold++;
@@ -129,9 +211,10 @@ contract Ticket is ERC721, ERC721URIStorage {
 
         attendees[msg.sender] = Attendee(
             msg.sender,
-            msg.value,
+            amountPaid,
             tierIndex,
-            false
+            false,
+            method
         );
         eventToAttendees[eventId].push(attendees[msg.sender]);
         emit TicketPurchased(msg.sender, msg.value, tierIndex);
@@ -192,12 +275,22 @@ contract Ticket is ERC721, ERC721URIStorage {
 
         require(!attendee.hasClaimedRefund, "Refund already claimed");
         uint256 refundAmount = attendee.amountPaid;
+        PaymentMethod method = attendee.paidWith;
         require(refundAmount > 0, "No funds to refund");
         attendee.hasClaimedRefund = true;
 
         // Refund the amount
-        (bool sent, ) = msg.sender.call{value: refundAmount}("");
-        require(sent, "Refund failed.");
+        if (method == PaymentMethod.Ether) {
+            (bool sent, ) = msg.sender.call{value: refundAmount}("");
+            require(sent, "Refund failed.");
+        } else if (method == PaymentMethod.ERC20TOKEN) {
+            require(
+                token.balanceOf(address(this)) >= refundAmount,
+                "Insufficient token balance"
+            );
+            bool success = token.transfer(msg.sender, refundAmount);
+            require(success, "Token transfer failed");
+        }
     }
 
     function validateTicket(
@@ -211,6 +304,34 @@ contract Ticket is ERC721, ERC721URIStorage {
     {
         require(!isEventTerminated, "Event is terminated");
         return ticketTiers[ticketId];
+    }
+
+    //REVENUE MANAGEMENT HERE.
+
+    function distributeRevenue(
+        uint256 totalRevenue,
+        PaymentMethod _method
+    ) external onlyOrganizer eventNotFinalized {
+        require(totalRevenue > 0, "No revenue to distribute");
+        for (uint256 i = 0; i < stakeholderAddresses.length; i++) {
+            address stakeholderAddress = stakeholderAddresses[i];
+            Stakeholder storage stakeholder = stakeholders[stakeholderAddress];
+            if (!stakeholder.isPaid) {
+                uint256 payment = (totalRevenue * stakeholder.share) / 100;
+                if (_method == PaymentMethod.Ether) {
+                    payable(stakeholderAddress).transfer(payment);
+                } else if (_method == PaymentMethod.ERC20TOKEN) {
+                    require(
+                        token.balanceOf(address(this)) >= payment,
+                        "Insufficient token balance"
+                    );
+                    bool success = token.transfer(stakeholderAddress, payment);
+                    require(success, "ERC20 token transfer failed");
+                }
+                stakeholder.amountReceived += payment;
+                stakeholder.isPaid = true;
+            }
+        }
     }
 
     function mintTickets(

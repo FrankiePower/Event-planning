@@ -4,11 +4,18 @@ pragma solidity ^0.8.21;
 import "./Ticket.sol";
 import "./VendorAgreement.sol";
 import "./SponsorAgreement.sol";
-import "./RevenueSharing.sol";
+// import "./RevenueSharing.sol";
 import {Error} from "./Utils/Errors.sol";
 
 contract EventManagerFactory {
-    uint256 public eventCount;
+    uint32 public eventCount;
+
+    enum EventStatus {
+        Upcoming, //Active ticket on sale
+        Ongoing, //Live. Event is happening live
+        Completed, //Concluded or Finished
+        Terminated
+    }
 
     struct EventDetail {
         uint256 eventId;
@@ -22,7 +29,8 @@ contract EventManagerFactory {
         address ticketContract;
         address sponsorContract;
         address vendorContract;
-        address revenueSharingContract;
+        // address revenueSharingContract;
+        EventStatus status;
     }
 
     struct EventBasicDetails {
@@ -62,6 +70,7 @@ contract EventManagerFactory {
     mapping(uint256 => EventDetail) public events;
 
     event EventCreated(uint256 eventId);
+    event EventSetEventStatus(uint256 eventId);
     event EventRetrivedSuccessful(
         uint256 indexed eventId,
         string eventName,
@@ -73,7 +82,8 @@ contract EventManagerFactory {
         TicketInfo memory ticketInfo,
         VendorInfo memory vendorInfo,
         SponsorInfo memory sponsorInfo,
-        RevenueInfo memory revenueInfo
+        RevenueInfo memory revenueInfo,
+        address paymentTokenAddress
     ) external returns (uint256 eventId) {
         if (msg.sender == address(0)) {
             revert Error.ZeroAddressDetected();
@@ -105,6 +115,9 @@ contract EventManagerFactory {
         if (eventBasicDetails.organizer == address(0)) {
             revert Error.ZeroAddressDetected();
         }
+        if (paymentTokenAddress == address(0)) {
+            revert Error.ZeroAddressDetected();
+        }
 
         eventCount++;
 
@@ -114,7 +127,9 @@ contract EventManagerFactory {
                 eventCount,
                 eventBasicDetails.totalTickets,
                 ticketInfo,
-                eventBasicDetails.organizer
+                revenueInfo,
+                eventBasicDetails.organizer,
+                paymentTokenAddress
             )
         );
 
@@ -134,9 +149,13 @@ contract EventManagerFactory {
             )
         );
 
-        address revenueSharingContract = address(
-            new RevenueSharing(revenueInfo, eventBasicDetails.organizer)
-        );
+        // address revenueSharingContract = address(
+        //     new RevenueSharing(
+        //         revenueInfo,
+        //         eventBasicDetails.organizer,
+        //         ticketContract
+        //     )
+        // );
 
         events[eventCount] = EventDetail(
             eventCount,
@@ -150,16 +169,28 @@ contract EventManagerFactory {
             ticketContract,
             sponsorAgreementContract,
             vendorAgreementContract,
-            revenueSharingContract
+            // revenueSharingContract
+            EventStatus.Upcoming
         );
 
         emit EventCreated(eventCount);
         return eventCount;
     }
 
+    function setEventStatus(EventStatus _status, uint _eventId) external {
+        require(events[_eventId].eventId != 0, "Invalid EventID");
+        require(isValidStatus(_status), "Invalid status value");
+
+        EventDetail storage ev = events[_eventId];
+        require(ev.organizer == msg.sender, "Authorized Access");
+        ev.status = _status;
+        emit EventSetEventStatus(_eventId);
+    }
+
     function getEventContracts(
         uint256 eventId
     ) external returns (EventDetail memory) {
+        require(events[eventId].eventId != 0, "Invalid EventID");
         EventDetail storage ev = events[eventId];
         emit EventRetrivedSuccessful(eventId, ev.eventName, ev.organizer);
         return events[eventId];
@@ -168,4 +199,13 @@ contract EventManagerFactory {
     function _isEmptyString(string memory str) internal pure returns (bool) {
         return bytes(str).length == 0;
     }
+
+    function isValidStatus(EventStatus _status) internal pure returns (bool) {
+        uint enumValue = uint(_status);
+        return (enumValue >= uint(EventStatus.Upcoming) &&
+            enumValue <= uint(EventStatus.Terminated));
+    }
+
+    // Allows the contract to receive Ether
+    receive() external payable {}
 }
