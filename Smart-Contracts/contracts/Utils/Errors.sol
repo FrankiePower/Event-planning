@@ -31,4 +31,5 @@ library Error {
     error AllTicketSoldOut();
     error InsufficientFunds();
     error TokenTransferFailed();
+    error InvalidVendorPayment();
 }
