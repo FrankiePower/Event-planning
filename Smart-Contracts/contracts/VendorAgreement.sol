@@ -30,8 +30,15 @@ contract VendorAgreement is ReentrancyGuard {
 
     AgreementStatus public status;
 
-   
+    // Events
+    event AgreementCreated(address[] vendors, uint256 totalPayment);
+    event AgreementFunded(uint256 amount);
+    event ServiceDelivered(address vendor);
+    event PaymentReleased(address vendor, uint256 amount);
+    event DisputeResolved(address vendor, bool decisionForVendor);
+    event AgreementTerminated();
 
+   
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
     
