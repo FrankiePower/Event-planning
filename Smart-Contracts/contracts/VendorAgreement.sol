@@ -19,7 +19,18 @@ contract VendorAgreement is ReentrancyGuard {
 
     address[] public vendorList;
 
+    enum AgreementStatus {
+        NotCreated,
+        Pending,
+        Active,
+        Completed,
+        Disputed,
+        Terminated
+    }
 
+    AgreementStatus public status;
+
+   
 
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
