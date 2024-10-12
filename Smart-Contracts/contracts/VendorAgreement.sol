@@ -69,8 +69,32 @@ contract VendorAgreement is ReentrancyGuard {
         status = AgreementStatus.NotCreated;
     }
 
-    
+    function createVendorAgreement(
+        address[] memory _vendors,
+        uint256[] memory _vendorPayments,
+        string[] memory _vendorServices
+    ) external onlyOrganizer requireStatus(AgreementStatus.NotCreated) {
+        require(_vendors.length == _vendorPayments.length && _vendors.length == _vendorServices.length, "Arrays must have the same length");
+        
+        for (uint256 i = 0; i < _vendors.length; i++) {
+            require(_vendors[i] != address(0), "Invalid vendor address");
+            require(_vendorPayments[i] > 0, "Vendor payment must be greater than 0");
+            require(bytes(_vendorServices[i]).length > 0, "Vendor service description cannot be empty");
 
+            isVendor[_vendors[i]] = true;
+            vendorList.push(_vendors[i]);
+            vendorPayments[_vendors[i]] = _vendorPayments[i];
+            vendorServices[_vendors[i]] = _vendorServices[i];
+            serviceDelivered[_vendors[i]] = false;
+
+            totalPaymentRequired += _vendorPayments[i];
+        }
+
+        status = AgreementStatus.Pending;
+        emit AgreementCreated(_vendors, totalPaymentRequired);
+    }
+
+    
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
     
