@@ -94,7 +94,19 @@ contract VendorAgreement is ReentrancyGuard {
         emit AgreementCreated(_vendors, totalPaymentRequired);
     }
 
-    
+    function fundAgreement() external payable onlyOrganizer requireStatus(AgreementStatus.Pending) nonReentrant {
+        require(!agreementFunded, "Agreement already funded");
+        require(msg.value == totalPaymentRequired, "Incorrect funding amount");
+        require(escrowAddress != address(0), "Escrow address not set");
+
+        (bool success, ) = escrowAddress.call{value: msg.value}("");
+        require(success, "Transfer to escrow failed");
+
+        agreementFunded = true;
+        status = AgreementStatus.Active;
+        emit AgreementFunded(msg.value);
+    }
+
 
     //Establishes agreements with vendors,detailing payment terms and service requirements.
     
