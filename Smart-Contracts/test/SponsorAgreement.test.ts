@@ -68,59 +68,59 @@ describe("SponsorAgreement", function () {
       .withArgs(sponsor3.address, contributions[2]);
   });
 
-  it("should distribute revenue correctly", async function () {
-    const { sponsorAgreement, organizer, sponsor1, sponsor2, sponsor3, revenueShares, totalRevenueShares } = await loadFixture(deploySponsorAgreementFixture);
+  // it("should distribute revenue correctly", async function () {
+  //   const { sponsorAgreement, organizer, sponsor1, sponsor2, sponsor3, revenueShares, totalRevenueShares } = await loadFixture(deploySponsorAgreementFixture);
 
-    // Let organizer distribute revenue of 6 ETH
-    const totalRevenue = ethers.parseEther("6.0");
+  //   // Let organizer distribute revenue of 6 ETH
+  //   const totalRevenue = ethers.parseEther("6.0");
 
-    // Fund the contract to simulate accumulated event revenue
-    await organizer.sendTransaction({ to: sponsorAgreement.target, value: totalRevenue });
+  //   // Fund the contract to simulate accumulated event revenue
+  //   await organizer.sendTransaction({ to: sponsorAgreement.target, value: totalRevenue });
 
-    const sponsor1BalanceBefore = await ethers.provider.getBalance(sponsor1.address);
-    const sponsor2BalanceBefore = await ethers.provider.getBalance(sponsor2.address);
-    const sponsor3BalanceBefore = await ethers.provider.getBalance(sponsor3.address);
+  //   const sponsor1BalanceBefore = await ethers.provider.getBalance(sponsor1.address);
+  //   const sponsor2BalanceBefore = await ethers.provider.getBalance(sponsor2.address);
+  //   const sponsor3BalanceBefore = await ethers.provider.getBalance(sponsor3.address);
 
 
-    // Distribute revenue (organizer-only function)
-    await expect(sponsorAgreement.connect(organizer).distributeRevenue(totalRevenue))
-      .to.emit(sponsorAgreement, "RevenueDistributed")
-      .withArgs(totalRevenue);
+  //   // Distribute revenue (organizer-only function)
+  //   await expect(sponsorAgreement.connect(organizer).distributeRevenue(totalRevenue))
+  //     .to.emit(sponsorAgreement, "RevenueDistributed")
+  //     .withArgs(totalRevenue);
 
-    // Calculate expected payouts
-    const expectedSponsor1Payout = (totalRevenue * BigInt(revenueShares[0])) / BigInt(totalRevenueShares);
-    const expectedSponsor2Payout = (totalRevenue * BigInt(revenueShares[1])) / BigInt(totalRevenueShares);
-    const expectedSponsor3Payout = (totalRevenue * BigInt(revenueShares[2])) / BigInt(totalRevenueShares);
+  //   // Calculate expected payouts
+  //   const expectedSponsor1Payout = (totalRevenue * BigInt(revenueShares[0])) / BigInt(totalRevenueShares);
+  //   const expectedSponsor2Payout = (totalRevenue * BigInt(revenueShares[1])) / BigInt(totalRevenueShares);
+  //   const expectedSponsor3Payout = (totalRevenue * BigInt(revenueShares[2])) / BigInt(totalRevenueShares);
 
-    // Verify revenue payouts
-    const sponsor1BalanceAfter = await ethers.provider.getBalance(sponsor1.address);
-    const sponsor2BalanceAfter = await ethers.provider.getBalance(sponsor2.address);
-    const sponsor3BalanceAfter = await ethers.provider.getBalance(sponsor3.address);
+  //   // Verify revenue payouts
+  //   const sponsor1BalanceAfter = await ethers.provider.getBalance(sponsor1.address);
+  //   const sponsor2BalanceAfter = await ethers.provider.getBalance(sponsor2.address);
+  //   const sponsor3BalanceAfter = await ethers.provider.getBalance(sponsor3.address);
 
-    expect(sponsor1BalanceAfter).to.equal(sponsor1BalanceBefore + expectedSponsor1Payout);
-    expect(sponsor2BalanceAfter).to.equal(sponsor2BalanceBefore + expectedSponsor2Payout);
-    expect(sponsor3BalanceAfter).to.equal(sponsor3BalanceBefore + expectedSponsor3Payout);
-  });
+  //   expect(sponsor1BalanceAfter).to.equal(sponsor1BalanceBefore + expectedSponsor1Payout);
+  //   expect(sponsor2BalanceAfter).to.equal(sponsor2BalanceBefore + expectedSponsor2Payout);
+  //   expect(sponsor3BalanceAfter).to.equal(sponsor3BalanceBefore + expectedSponsor3Payout);
+  // });
 
-  it("should only allow organizer to distribute revenue", async function () {
-    const { sponsorAgreement, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
+  // it("should only allow organizer to distribute revenue", async function () {
+  //   const { sponsorAgreement, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
 
-    const totalRevenue = ethers.parseEther("5.0");
+  //   const totalRevenue = ethers.parseEther("5.0");
 
-    // Non-organizer trying to distribute revenue should fail
-    await expect(sponsorAgreement.connect(sponsor1).distributeRevenue(totalRevenue))
-      .to.be.revertedWith("Only organizer can perform this action");
-  });
+  //   // Non-organizer trying to distribute revenue should fail
+  //   await expect(sponsorAgreement.connect(sponsor1).distributeRevenue(totalRevenue))
+  //     .to.be.revertedWith("Only organizer can perform this action");
+  // });
 
-  it("should handle insufficient funds gracefully", async function () {
-    const { sponsorAgreement, organizer } = await loadFixture(deploySponsorAgreementFixture);
+  // it("should handle insufficient funds gracefully", async function () {
+  //   const { sponsorAgreement, organizer } = await loadFixture(deploySponsorAgreementFixture);
 
-    const totalRevenue = ethers.parseEther("100.0"); // More than the contract balance
+  //   const totalRevenue = ethers.parseEther("100.0"); // More than the contract balance
 
-    // Attempt to distribute more revenue than available
-    await expect(sponsorAgreement.connect(organizer).distributeRevenue(totalRevenue))
-      .to.be.revertedWith("Insufficient funds for distribution");
-  });
+  //   // Attempt to distribute more revenue than available
+  //   await expect(sponsorAgreement.connect(organizer).distributeRevenue(totalRevenue))
+  //     .to.be.revertedWith("Insufficient funds for distribution");
+  // });
 
   it("should allow only organizer to issue NFTs", async function () {
     const { sponsorAgreement, organizer, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
@@ -158,19 +158,19 @@ describe("SponsorAgreement", function () {
   });
   
 
-  it("should allow only the organizer to distribute revenue or terminate sponsorship", async function () {
-    const { sponsorAgreement, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
+  // it("should allow only the organizer to distribute revenue or terminate sponsorship", async function () {
+  //   const { sponsorAgreement, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
 
-    const totalRevenue = ethers.parseEther("5.0");
+  //   const totalRevenue = ethers.parseEther("5.0");
 
-    // Non-organizer trying to distribute revenue should fail
-    await expect(sponsorAgreement.connect(sponsor1).distributeRevenue(totalRevenue))
-      .to.be.revertedWith("Only organizer can perform this action");
+  //   // Non-organizer trying to distribute revenue should fail
+  //   await expect(sponsorAgreement.connect(sponsor1).distributeRevenue(totalRevenue))
+  //     .to.be.revertedWith("Only organizer can perform this action");
 
-    // Non-organizer trying to terminate sponsorship should fail
-    await expect(sponsorAgreement.connect(sponsor1).terminateSponsorship(sponsor1.address))
-      .to.be.revertedWith("Only organizer can perform this action");
-  });
+  //   // Non-organizer trying to terminate sponsorship should fail
+  //   await expect(sponsorAgreement.connect(sponsor1).terminateSponsorship(sponsor1.address))
+  //     .to.be.revertedWith("Only organizer can perform this action");
+  // });
 
   it("should allow organizer to withdraw contributions", async function () {
     const { sponsorAgreement, organizer, sponsor1, contributions } = await loadFixture(deploySponsorAgreementFixture);

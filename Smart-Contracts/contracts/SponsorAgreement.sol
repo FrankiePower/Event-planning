@@ -168,29 +168,6 @@ contract SponsorAgreement is ReentrancyGuard {
         return (s.contribution, s.revenueShare, s.paid, s.active, s.eventId);
     }
 
-    function distributeRevenue(uint256 _totalRevenue) external onlyOrganizer nonReentrant {
-        require(_totalRevenue > 0, "Total revenue must be greater than zero");
-        require(totalRevenueShares > 0, "No revenue shares available");
-        require(address(this).balance >= _totalRevenue, "Insufficient funds for distribution"); // Check contract balance
-
-        uint256 remainingRevenue = _totalRevenue;
-
-        for (uint256 i = 0; i < sponsorAddresses.length; i++) {
-            address sponsorAddress = sponsorAddresses[i];
-            Sponsor storage sponsor = sponsors[sponsorAddress];
-            if (sponsor.active && !sponsor.paid) {
-                uint256 sponsorShare = (_totalRevenue * sponsor.revenueShare) / totalRevenueShares;
-                (bool success, ) = sponsorAddress.call{value: sponsorShare}("");
-                require(success, "Revenue transfer failed");
-
-                sponsor.paid = true;
-                remainingRevenue -= sponsorShare;
-            }
-        }
-
-        emit RevenueDistributed(_totalRevenue);
-    }
-
     receive() external payable {}
 
 }
