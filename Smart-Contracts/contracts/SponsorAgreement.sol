@@ -30,7 +30,6 @@ contract SponsorAgreement is ReentrancyGuard {
         uint8[] revenueShares,
         address organizer
     );
-    
     event ContributionReceived(address indexed sponsor, uint amount);
     event RevenueDistributed(uint totalRevenue);
     event SponsorshipNFTIssued(address indexed sponsor, uint tokenId);
@@ -116,7 +115,7 @@ contract SponsorAgreement is ReentrancyGuard {
         emit SponsorshipTerminated(sponsor, s.contribution);
     }
 
-    //distributeRevenue() //This function will be triggered when sharing ticket revenue.
+    //distributeRevenue() //This function will be integrated inside the ticket contract since thats where the ticket revenue is.
 
     //Only Organizer Should Withdraw Total Contribution
     function withdrawContribution(
