@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./EventManagerFactory.sol";
 import {Error} from "./Utils/Errors.sol";
+import "hardhat/console.sol";
 
 contract SponsorAgreement is ReentrancyGuard {
     struct Sponsor {
@@ -21,6 +22,10 @@ contract SponsorAgreement is ReentrancyGuard {
     address public organizer;
     bool public isTerminated;
     uint256 public eventId;
+    address[] public sponsorAddresses; // Array to store sponsor addresses
+
+    // Add a mapping to track issued NFTs
+    mapping(address => uint256) public sponsorNFTs;
 
     event SponsorshipAgreementCreated(
         uint256 eventId,
@@ -36,6 +41,7 @@ contract SponsorAgreement is ReentrancyGuard {
         address indexed sponsor,
         uint256 refundedAmount
     );
+    event Withdrawal(address indexed sponsor, uint256 amount);
 
     modifier onlyOrganizer() {
         require(
@@ -65,13 +71,15 @@ contract SponsorAgreement is ReentrancyGuard {
         organizer = _organizer;
 
         for (uint256 i = 0; i < sponsorInfo.sponsors.length; i++) {
-            sponsors[sponsorInfo.sponsors[i]] = Sponsor(
+            address sponsorAddress = sponsorInfo.sponsors[i];
+            sponsors[sponsorAddress] = Sponsor(
                 sponsorInfo.sponsorContributions[i],
                 sponsorInfo.sponsorRevenueShares[i],
                 false,
                 true, // Sponsor is active by default
                 eventId
             );
+            sponsorAddresses.push(sponsorAddress); // Add sponsor address to array
             totalContributions += sponsorInfo.sponsorContributions[i];
             totalRevenueShares += sponsorInfo.sponsorRevenueShares[i];
         }
@@ -100,24 +108,32 @@ contract SponsorAgreement is ReentrancyGuard {
         emit ContributionReceived(msg.sender, msg.value);
     }
 
-    //IssueNFTToSponsor Not Implemented
 
-    function terminateSponsorship(
-        address sponsor
-    ) external onlyOrganizer nonReentrant {
+    function issueSponsorshipNFT(address sponsor, uint256 tokenId) external onlyOrganizer {
+        Sponsor storage s = sponsors[sponsor];
+        require(s.contribution > 0 && s.active, "Invalid sponsor");
+        require(sponsorNFTs[sponsor] == 0, "NFT already issued");
+
+        sponsorNFTs[sponsor] = tokenId; // Assign the NFT tokenId to the sponsor
+        emit SponsorshipNFTIssued(sponsor, tokenId);
+    }
+
+    function terminateSponsorship(address sponsor) external onlyOrganizer nonReentrant {
         require(!isTerminated, "Sponsorship has already been terminated");
         Sponsor storage s = sponsors[sponsor];
         require(s.contribution > 0 && s.active, "Invalid sponsor");
+
+        // Ensure contract has enough balance to refund
+        require(address(this).balance >= s.contribution, "Not enough balance for refund");
 
         // Refund contribution
         (bool success, ) = sponsor.call{value: s.contribution}("");
         require(success, "Refund transfer failed");
 
+        s.contribution = 0;
         s.active = false; // Mark the sponsor as inactive
         emit SponsorshipTerminated(sponsor, s.contribution);
     }
-
-    //distributeRevenue() //This function will be triggered when sharing ticket revenue.
 
     //Only Organizer Should Withdraw Total Contribution
     function withdrawContribution(
@@ -132,6 +148,7 @@ contract SponsorAgreement is ReentrancyGuard {
 
         (bool success, ) = organizer.call{value: _amount}("");
         require(success, "Withdrawal failed");
+        emit Withdrawal(organizer, _amount);
     }
 
     function getSponsorDetails(
@@ -150,4 +167,7 @@ contract SponsorAgreement is ReentrancyGuard {
         Sponsor memory s = sponsors[sponsor];
         return (s.contribution, s.revenueShare, s.paid, s.active, s.eventId);
     }
+
+    receive() external payable {}
+
 }
