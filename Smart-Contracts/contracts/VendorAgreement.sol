@@ -1,175 +1,207 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import "./EventManagerFactory.sol";
+import "./Libraries/VendorAgreementLib.sol";
+// import "./EventManagerFactory.sol";
 import "./Utils/Errors.sol";
 
-contract VendorAgreement {
+library VendorLibrary {
+    function validateAddress(address addr) internal pure {
+        if (addr == address(0)) {
+            revert Error.ZeroAddressDetected();
+        }
+    }
 
+    function transferPayment(address payable recipient, uint amount) internal {
+        (bool success, ) = recipient.call{value: amount}("");
+        if (!success) {
+            revert Error.CouldNotReleaseVendorPayment();
+        }
+    }
+}
+
+contract VendorAgreement {
     struct Vendor {
-        uint event_Id;
-        string vendorService;
-        uint vendorPayment;
+        uint32 eventId;
+        uint32 vendorPayment;
         bool confirmServiceDelivery;
         bool paid;
         bool isActive;
         bool isTerminated;
+        bool disputeRaised;
     }
 
     address public organizer;
-    uint public eventId;
-    mapping(address => Vendor) public vendor;
+    uint32 public eventId;
+    address public arbitrator;
 
-        constructor(
-        uint256 _eventId,
-        EventManagerFactory.VendorInfo memory vendorInfo,
-        address _organizer
+    mapping(address => Vendor) public vendors;
+    mapping(address => uint) public escrowBalance;
+
+    event VendorCreated(address indexed vendor, uint indexed eventId);
+    event VendorPaid(address indexed vendor, uint indexed payment);
+    event ServiceDeliveryConfirmed(address indexed vendor);
+    event VendorTerminated(address indexed vendor, uint indexed eventId);
+    event DisputeResolved(address indexed vendor, bool decisionForVendor);
+
+    constructor(
+        uint32 _eventId,
+        VendorAgreementLib.VendorInfo memory vendorInfo,
+        address _organizer,
+        address _arbitrator
     ) {
         eventId = _eventId;
         organizer = _organizer;
+        arbitrator = _arbitrator;
 
-        require(vendorInfo.vendors.length == vendorInfo.vendorPayments.length, "Inconsistent vendor data");
-        require(vendorInfo.vendors.length == vendorInfo.vendorServices.length, "Inconsistent vendor data");
-        
+        require(
+            vendorInfo.vendors.length == vendorInfo.vendorPayments.length,
+            "Vendor data mismatch"
+        );
+        for (uint i = 0; i < vendorInfo.vendors.length; i++) {
+            vendors[vendorInfo.vendors[i]] = Vendor({
+                eventId: _eventId,
+                vendorPayment: uint32(vendorInfo.vendorPayments[i]),
+                confirmServiceDelivery: false,
+                paid: false,
+                isActive: true,
+                isTerminated: false,
+                disputeRaised: false
+            });
+            emit VendorCreated(vendorInfo.vendors[i], _eventId);
+        }
     }
 
-    // Events
-    event fundAgreementSuccessful(
-        address indexed vendor,
-        address indexed organizer,
-        uint indexed amount
-    );
-
-    event VendorCreatedSuccessfully(
-        address indexed vendorAddress,
-        uint indexed eventId
-    );
-
-    event ServiceDeliveryConfirmed(
-        address indexed vendorAddress,
-        address indexed organizer
-    );
-
-    event VendorPaidSuccessfully(
-        address indexed vendorAddress,
-        uint indexed payment
-    );
-
-    event VendorAgreementTerminated(
-        address indexed vendorAddress,
-        uint eventId
-    );
-
-    
-
-    //Implement OnlyOrganizer Modifier
-    modifier onlyOrganizer {
-        require(msg.sender == organizer, "Only event organizer can perform this operation");
-        _;
+    // Private function to replace `onlyOrganizer` modifier
+    function _onlyOrganizer() private view {
+        require(msg.sender == organizer, "Only organizer");
     }
 
-    //The Organizer deposits money to the contract agreement which will be in escrow for payment when the agreement is fulfilled
-    function fundAgreement(address vendorAddress) external payable {
-        Vendor memory vendorDetails = vendor[vendorAddress]; 
-        // check if vendor contract has been terminated before sending funds
-        require(vendorDetails.isTerminated == false, "Vendor contract has been terminated");
-        uint vendorPaymentAmount = vendorDetails.vendorPayment;
-        // checks for vendor payment details
-        require(vendorPaymentAmount > 0, "Vendor not found");
-
-        (bool success, ) = organizer.call{value: vendorPaymentAmount}("");
-        require(success, "Could not fund for vendor services");
-
-        emit fundAgreementSuccessful(vendorAddress, organizer, vendorPaymentAmount);
+    // Private function to replace `onlyArbitrator` modifier
+    function _onlyArbitrator() private view {
+        require(msg.sender == arbitrator, "Only arbitrator");
     }
 
-    //Establishes agreements with vendors,detailing payment terms and service requirements.
     function createVendorAgreement(
-        string memory _vendorService,
-        uint _vendorPayment,
+        uint32 _vendorPayment,
         address _vendorAddress
-    ) external payable {
-        if(_vendorPayment <= 0) {
-            revert Error.InvalidVendorPayment();
+    ) external {
+        _onlyOrganizer(); // Replacing modifier with function call
+        VendorLibrary.validateAddress(_vendorAddress);
+        require(_vendorPayment > 0, "Invalid payment");
+
+        vendors[_vendorAddress] = Vendor({
+            eventId: eventId,
+            vendorPayment: _vendorPayment,
+            confirmServiceDelivery: false,
+            paid: false,
+            isActive: true,
+            isTerminated: false,
+            disputeRaised: false
+        });
+        emit VendorCreated(_vendorAddress, eventId);
+    }
+
+    function fundAgreement(address vendorAddress) external payable {
+        _onlyOrganizer(); // Replacing modifier with function call
+        VendorLibrary.validateAddress(vendorAddress);
+
+        Vendor storage vendor = vendors[vendorAddress];
+        require(!vendor.isTerminated, "Terminated");
+        require(msg.value == vendor.vendorPayment, "Invalid amount");
+
+        escrowBalance[vendorAddress] += msg.value;
+    }
+
+    function confirmServiceDelivered(address vendorAddress) external {
+        _onlyOrganizer(); // Replacing modifier with function call
+        VendorLibrary.validateAddress(vendorAddress);
+
+        Vendor storage vendor = vendors[vendorAddress];
+        require(!vendor.isTerminated, "Terminated");
+
+        vendor.confirmServiceDelivery = true;
+        emit ServiceDeliveryConfirmed(vendorAddress);
+    }
+
+    function releasePayment(address vendorAddress) external {
+        _onlyOrganizer(); // Replacing modifier with function call
+        VendorLibrary.validateAddress(vendorAddress);
+
+        Vendor storage vendor = vendors[vendorAddress];
+        require(vendor.confirmServiceDelivery, "Service not confirmed");
+        require(!vendor.paid, "Already paid");
+        uint payment = escrowBalance[vendorAddress];
+        require(payment > 0, "No funds");
+
+        vendor.paid = true;
+        escrowBalance[vendorAddress] = 0;
+        VendorLibrary.transferPayment(payable(vendorAddress), payment);
+
+        emit VendorPaid(vendorAddress, payment);
+    }
+
+    function raiseDispute(address vendorAddress) external {
+        VendorLibrary.validateAddress(vendorAddress);
+
+        Vendor storage vendor = vendors[vendorAddress];
+        require(!vendor.isTerminated, "Terminated");
+        require(
+            msg.sender == vendorAddress || msg.sender == organizer,
+            "Unauthorized"
+        );
+        require(!vendor.disputeRaised, "Already raised");
+
+        vendor.disputeRaised = true;
+    }
+
+    function resolveDispute(
+        address vendorAddress,
+        bool decisionForVendor
+    ) external {
+        _onlyArbitrator(); // Replacing modifier with function call
+        VendorLibrary.validateAddress(vendorAddress);
+
+        Vendor storage vendor = vendors[vendorAddress];
+        require(vendor.disputeRaised, "No dispute");
+        uint payment = escrowBalance[vendorAddress];
+
+        if (decisionForVendor) {
+            vendor.paid = true;
+            escrowBalance[vendorAddress] = 0;
+            VendorLibrary.transferPayment(payable(vendorAddress), payment);
+        } else {
+            escrowBalance[vendorAddress] = 0;
+            VendorLibrary.transferPayment(payable(organizer), payment);
         }
 
-        Vendor memory vendorDetails = Vendor(
-             eventId,
-            _vendorService,
-            _vendorPayment,
-            false,
-            false,
-            true,
-            false
-        );
+        vendor.isTerminated = true;
+        vendor.disputeRaised = false;
 
-        vendor[_vendorAddress] = vendorDetails; 
-
-        emit VendorCreatedSuccessfully(_vendorAddress, eventId);
+        emit DisputeResolved(vendorAddress, decisionForVendor);
     }
 
-    function confirmServiceDelivered(address _vendorAddress) external onlyOrganizer {
-        //This function should have onlyOrganizer Modifier.
-        require(_vendorAddress != address(0), "Invalid vendor address");
-        require(vendor[_vendorAddress].isTerminated == false, "Vendor contract terminated");
+    function terminateAgreement(address vendorAddress) external {
+        _onlyOrganizer(); // Replacing modifier with function call
+        VendorLibrary.validateAddress(vendorAddress);
 
-        vendor[_vendorAddress].confirmServiceDelivery = true;
+        Vendor storage vendor = vendors[vendorAddress];
+        require(!vendor.isTerminated, "Already terminated");
 
-        emit ServiceDeliveryConfirmed(_vendorAddress, organizer);
+        uint refundAmount = escrowBalance[vendorAddress];
+        require(refundAmount > 0, "No funds");
+
+        vendor.isTerminated = true;
+        escrowBalance[vendorAddress] = 0;
+        VendorLibrary.transferPayment(payable(organizer), refundAmount);
+
+        emit VendorTerminated(vendorAddress, eventId);
     }
 
-    function releasePayment(address _vendorAddress) external {
-        //The payment is released only if the confirmServiceDelivered function has been called and the service is confirmed.
-        require(_vendorAddress != address(0), "Invalid vendor address");
-
-        Vendor memory vendorDetails = vendor[_vendorAddress];
-
-        require(vendorDetails.confirmServiceDelivery, "Confirm service delivery first");
-        require(vendorDetails.isTerminated == false, "Vendor contract has been terminated");
-
-        uint vendorPaymentAmount = vendorDetails.vendorPayment;
-
-        // avoid multiple disbursement of funds to same vendor
-        require(vendorDetails.paid == false, "Cannot disburse funds to vendor twice");
-
-        vendorDetails.paid = true;
-        (bool success, ) = _vendorAddress.call{ value: vendorPaymentAmount }("");
-        require(success, "Could not release vendor payment");
-
-        emit VendorPaidSuccessfully(_vendorAddress, vendorPaymentAmount);
-
-
-    }
-
-    function resolveDispute(bool decisionForVendor) external {
-        //Implement onlyArbitrator modifier for dispute
-    }
-
-    function terminateAgreement(address _vendorAddress) external onlyOrganizer {
-        //onlyOrganizer Implementation
-        //Only Organizer terminates contract and the organizer money is refunded automatically.
-        require(_vendorAddress != address(0), "Invalid address");
-
-        vendor[_vendorAddress].isTerminated = true;
-
-        uint vendorPaymentAmount = vendor[_vendorAddress].vendorPayment;
-
-        require(vendorPaymentAmount > 0, "Insufficient funds to transfer");
-
-        (bool success, ) = organizer.call{ value: vendorPaymentAmount }("");
-
-        emit VendorAgreementTerminated(_vendorAddress, eventId);
-    }
-
-    function getVendorDetails(address _vendorAddress)
-        external
-        view
-        returns (Vendor memory)
-    {
-        require(_vendorAddress != address(0), "Invalid vendor address");
-
-        // returning the whole vendor struct to be unpacked on the frontend
-        Vendor memory vendor = vendor[_vendorAddress];
-
+    function getVendorDetails(
+        address vendorAddress
+    ) external view returns (Vendor memory) {
+        VendorLibrary.validateAddress(vendorAddress);
+        return vendors[vendorAddress];
     }
 }

@@ -7,7 +7,7 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 50, // Try adjusting the number of runs
+        runs: 200, // Try adjusting the number of runs
       },
     },
   },
