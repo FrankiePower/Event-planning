@@ -3,39 +3,39 @@ pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./EventManagerFactory.sol";
+import "./Libraries/SponsorAgreementLib.sol";
+import "./Libraries/EventCreationLib.sol";
 import {Error} from "./Utils/Errors.sol";
 
 contract SponsorAgreement is ReentrancyGuard {
     struct Sponsor {
-        uint256 contribution;
-        uint256 revenueShare;
+        uint contribution;
+        uint revenueShare;
         bool paid;
         bool active;
-        uint256 eventId;
+        uint eventId;
     }
 
     mapping(address => Sponsor) public sponsors;
-    uint256 public totalContributions;
-    uint256 public totalRevenueShares;
+    mapping(uint => EventCreationLib.EventDetail) public events;
+
+    uint public totalContributions;
+    uint public totalRevenueShares;
     address public organizer;
     bool public isTerminated;
-    uint256 public eventId;
+    uint public eventId;
 
     event SponsorshipAgreementCreated(
-        uint256 eventId,
+        uint eventId,
         address[] sponsors,
-        uint256[] contributions,
-        uint256[] revenueShares,
+        uint[] contributions,
+        uint8[] revenueShares,
         address organizer
     );
-    event ContributionReceived(address indexed sponsor, uint256 amount);
-    event RevenueDistributed(uint256 totalRevenue);
-    event SponsorshipNFTIssued(address indexed sponsor, uint256 tokenId);
-    event SponsorshipTerminated(
-        address indexed sponsor,
-        uint256 refundedAmount
-    );
+    event ContributionReceived(address indexed sponsor, uint amount);
+    event RevenueDistributed(uint totalRevenue);
+    event SponsorshipNFTIssued(address indexed sponsor, uint tokenId);
+    event SponsorshipTerminated(address indexed sponsor, uint refundedAmount);
 
     modifier onlyOrganizer() {
         require(
@@ -46,42 +46,63 @@ contract SponsorAgreement is ReentrancyGuard {
     }
 
     constructor(
-        EventManagerFactory.SponsorInfo memory sponsorInfo,
-        uint256 _eventId,
+        // SponsorAgreementLib.SponsorInfo memory sponsorInfo,
+        uint _eventId,
         address _organizer
     ) {
-        require(
-            sponsorInfo.sponsors.length ==
-                sponsorInfo.sponsorContributions.length,
-            "Mismatched sponsors and contributions"
-        );
-        require(
-            sponsorInfo.sponsors.length ==
-                sponsorInfo.sponsorRevenueShares.length,
-            "Mismatched sponsors and revenue shares"
-        );
+        // require(
+        //     sponsorInfo.sponsors.length ==
+        //         sponsorInfo.sponsorContributions.length,
+        //     "Mismatched sponsors and contributions"
+        // );
+        // require(
+        //     sponsorInfo.sponsors.length ==
+        //         sponsorInfo.sponsorRevenueShares.length,
+        //     "Mismatched sponsors and revenue shares"
+        // );
 
         eventId = _eventId;
         organizer = _organizer;
+        // uint initialSponsor = sponsorInfo.sponsors.length;
+        // if (initialSponsor > 0) {
+        //     for (uint i = 0; i < sponsorInfo.sponsors.length; i++) {
+        //         sponsors[sponsorInfo.sponsors[i]] = Sponsor(
+        //             sponsorInfo.sponsorContributions[i],
+        //             sponsorInfo.sponsorRevenueShares[i],
+        //             false,
+        //             true, // Sponsor is active by default
+        //             eventId
+        //         );
+        //         totalContributions += sponsorInfo.sponsorContributions[i];
+        //         totalRevenueShares += sponsorInfo.sponsorRevenueShares[i];
+        //     }
+        // }
 
-        for (uint256 i = 0; i < sponsorInfo.sponsors.length; i++) {
-            sponsors[sponsorInfo.sponsors[i]] = Sponsor(
-                sponsorInfo.sponsorContributions[i],
-                sponsorInfo.sponsorRevenueShares[i],
-                false,
-                true, // Sponsor is active by default
-                eventId
-            );
-            totalContributions += sponsorInfo.sponsorContributions[i];
-            totalRevenueShares += sponsorInfo.sponsorRevenueShares[i];
-        }
+        // emit SponsorshipAgreementCreated(
+        //     eventId,
+        //     sponsorInfo.sponsors,
+        //     sponsorInfo.sponsorContributions,
+        //     sponsorInfo.sponsorRevenueShares,
+        //     organizer
+        // );
+    }
 
-        emit SponsorshipAgreementCreated(
-            eventId,
-            sponsorInfo.sponsors,
-            sponsorInfo.sponsorContributions,
-            sponsorInfo.sponsorRevenueShares,
-            organizer
+    function addSponsor(
+        uint _contribution,
+        uint _revenueShare,
+        uint _eventId,
+        address _sponsorAddress
+    ) external nonReentrant {
+        require(_contribution > 0, "Invalid Contribution");
+        require(_revenueShare > 0, "Invalid sharing formaula");
+        require(events[_eventId].eventId != 0, "Invalid Event Id");
+        require(_sponsorAddress != address(0), "Address Zero Detectd");
+        sponsors[_sponsorAddress] = Sponsor(
+            _contribution,
+            _revenueShare,
+            false,
+            true,
+            _eventId
         );
     }
 
@@ -117,11 +138,8 @@ contract SponsorAgreement is ReentrancyGuard {
         emit SponsorshipTerminated(sponsor, s.contribution);
     }
 
-    //distributeRevenue() //This function will be triggered when sharing ticket revenue.
-
-    //Only Organizer Should Withdraw Total Contribution
     function withdrawContribution(
-        uint256 _amount
+        uint _amount
     ) external payable onlyOrganizer nonReentrant {
         if (_amount <= 0) {
             revert Error.ZeroValueNotAllowed();
@@ -140,11 +158,11 @@ contract SponsorAgreement is ReentrancyGuard {
         external
         view
         returns (
-            uint256 contribution,
-            uint256 revenueShare,
+            uint contribution,
+            uint revenueShare,
             bool paid,
             bool active, // Added active status to returned values
-            uint256 event_Id
+            uint event_Id
         )
     {
         Sponsor memory s = sponsors[sponsor];
