@@ -16,6 +16,9 @@ export default function BackgroundWrapper({
     case '/events':
       landingGradient = "from-gray-700 via-gray-800 to-gray-950";
       break;
+    case '/manage-event':
+        landingGradient = "from-[#121212] via-stone-900 to-black";
+        break;
     default:
       landingGradient = "from-stone-600/90 via-stone-800 to-stone-950";
   }
