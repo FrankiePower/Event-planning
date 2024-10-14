@@ -3,8 +3,8 @@ pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-// import "./EventManagerFactory.sol";
 import "./Libraries/SponsorAgreementLib.sol";
+import "./Libraries/EventCreationLib.sol";
 import {Error} from "./Utils/Errors.sol";
 
 contract SponsorAgreement is ReentrancyGuard {
@@ -17,6 +17,8 @@ contract SponsorAgreement is ReentrancyGuard {
     }
 
     mapping(address => Sponsor) public sponsors;
+    mapping(uint => EventCreationLib.EventDetail) public events;
+
     uint public totalContributions;
     uint public totalRevenueShares;
     address public organizer;
@@ -44,42 +46,63 @@ contract SponsorAgreement is ReentrancyGuard {
     }
 
     constructor(
-        SponsorAgreementLib.SponsorInfo memory sponsorInfo,
+        // SponsorAgreementLib.SponsorInfo memory sponsorInfo,
         uint _eventId,
         address _organizer
     ) {
-        require(
-            sponsorInfo.sponsors.length ==
-                sponsorInfo.sponsorContributions.length,
-            "Mismatched sponsors and contributions"
-        );
-        require(
-            sponsorInfo.sponsors.length ==
-                sponsorInfo.sponsorRevenueShares.length,
-            "Mismatched sponsors and revenue shares"
-        );
+        // require(
+        //     sponsorInfo.sponsors.length ==
+        //         sponsorInfo.sponsorContributions.length,
+        //     "Mismatched sponsors and contributions"
+        // );
+        // require(
+        //     sponsorInfo.sponsors.length ==
+        //         sponsorInfo.sponsorRevenueShares.length,
+        //     "Mismatched sponsors and revenue shares"
+        // );
 
         eventId = _eventId;
         organizer = _organizer;
+        // uint initialSponsor = sponsorInfo.sponsors.length;
+        // if (initialSponsor > 0) {
+        //     for (uint i = 0; i < sponsorInfo.sponsors.length; i++) {
+        //         sponsors[sponsorInfo.sponsors[i]] = Sponsor(
+        //             sponsorInfo.sponsorContributions[i],
+        //             sponsorInfo.sponsorRevenueShares[i],
+        //             false,
+        //             true, // Sponsor is active by default
+        //             eventId
+        //         );
+        //         totalContributions += sponsorInfo.sponsorContributions[i];
+        //         totalRevenueShares += sponsorInfo.sponsorRevenueShares[i];
+        //     }
+        // }
 
-        for (uint i = 0; i < sponsorInfo.sponsors.length; i++) {
-            sponsors[sponsorInfo.sponsors[i]] = Sponsor(
-                sponsorInfo.sponsorContributions[i],
-                sponsorInfo.sponsorRevenueShares[i],
-                false,
-                true, // Sponsor is active by default
-                eventId
-            );
-            totalContributions += sponsorInfo.sponsorContributions[i];
-            totalRevenueShares += sponsorInfo.sponsorRevenueShares[i];
-        }
+        // emit SponsorshipAgreementCreated(
+        //     eventId,
+        //     sponsorInfo.sponsors,
+        //     sponsorInfo.sponsorContributions,
+        //     sponsorInfo.sponsorRevenueShares,
+        //     organizer
+        // );
+    }
 
-        emit SponsorshipAgreementCreated(
-            eventId,
-            sponsorInfo.sponsors,
-            sponsorInfo.sponsorContributions,
-            sponsorInfo.sponsorRevenueShares,
-            organizer
+    function addSponsor(
+        uint _contribution,
+        uint _revenueShare,
+        uint _eventId,
+        address _sponsorAddress
+    ) external nonReentrant {
+        require(_contribution > 0, "Invalid Contribution");
+        require(_revenueShare > 0, "Invalid sharing formaula");
+        require(events[_eventId].eventId != 0, "Invalid Event Id");
+        require(_sponsorAddress != address(0), "Address Zero Detectd");
+        sponsors[_sponsorAddress] = Sponsor(
+            _contribution,
+            _revenueShare,
+            false,
+            true,
+            _eventId
         );
     }
 
@@ -115,9 +138,6 @@ contract SponsorAgreement is ReentrancyGuard {
         emit SponsorshipTerminated(sponsor, s.contribution);
     }
 
-    //distributeRevenue() //This function will be integrated inside the ticket contract since thats where the ticket revenue is.
-
-    //Only Organizer Should Withdraw Total Contribution
     function withdrawContribution(
         uint _amount
     ) external payable onlyOrganizer nonReentrant {

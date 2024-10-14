@@ -11,6 +11,36 @@ library RevenueDistributionLib {
         bool isPaid;
     }
 
+    function addStakeholderToEvent(
+        address _stakeholderAddress,
+        uint8 sharePercent,
+        uint8[] storage currentTicketShares,
+        mapping(address => Stakeholder) storage stakeholders,
+        mapping(uint => address) storage stakeholderAddresses
+    ) external returns (address, uint8) {
+        require(_stakeholderAddress != address(0), "Address Zero Detected");
+        require(sharePercent > 0, "Invalid share percent");
+        require(
+            stakeholders[_stakeholderAddress].share > 0,
+            "Stakeholder already added."
+        );
+        uint16 totalShares = 0;
+        uint16 currentLengthShares = uint16(currentTicketShares.length);
+        for (uint8 i = 0; i < currentLengthShares; i++) {
+            totalShares += currentTicketShares[i];
+        }
+        totalShares += sharePercent;
+        require(totalShares > 100, "Share Limit Exceeded");
+        currentTicketShares.push(sharePercent);
+        stakeholderAddresses[currentLengthShares++] = _stakeholderAddress;
+        stakeholders[_stakeholderAddress] = Stakeholder({
+            share: sharePercent,
+            amountReceived: 0,
+            isPaid: false
+        });
+        return (_stakeholderAddress, sharePercent);
+    }
+
     function distributeRevenue(
         mapping(address => Stakeholder) storage stakeholders,
         mapping(uint => address) storage stakeholderAddresses,

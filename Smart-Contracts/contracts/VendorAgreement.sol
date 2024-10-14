@@ -2,7 +2,6 @@
 pragma solidity ^0.8.21;
 
 import "./Libraries/VendorAgreementLib.sol";
-// import "./EventManagerFactory.sol";
 import "./Utils/Errors.sol";
 
 library VendorLibrary {
@@ -24,6 +23,7 @@ contract VendorAgreement {
     struct Vendor {
         uint32 eventId;
         uint32 vendorPayment;
+        string vendorServiceAgreement;
         bool confirmServiceDelivery;
         bool paid;
         bool isActive;
@@ -46,7 +46,7 @@ contract VendorAgreement {
 
     constructor(
         uint32 _eventId,
-        VendorAgreementLib.VendorInfo memory vendorInfo,
+        // VendorAgreementLib.VendorInfo memory vendorInfo,
         address _organizer,
         address _arbitrator
     ) {
@@ -54,22 +54,22 @@ contract VendorAgreement {
         organizer = _organizer;
         arbitrator = _arbitrator;
 
-        require(
-            vendorInfo.vendors.length == vendorInfo.vendorPayments.length,
-            "Vendor data mismatch"
-        );
-        for (uint i = 0; i < vendorInfo.vendors.length; i++) {
-            vendors[vendorInfo.vendors[i]] = Vendor({
-                eventId: _eventId,
-                vendorPayment: uint32(vendorInfo.vendorPayments[i]),
-                confirmServiceDelivery: false,
-                paid: false,
-                isActive: true,
-                isTerminated: false,
-                disputeRaised: false
-            });
-            emit VendorCreated(vendorInfo.vendors[i], _eventId);
-        }
+        // require(
+        //     vendorInfo.vendors.length == vendorInfo.vendorPayments.length,
+        //     "Vendor data mismatch"
+        // );
+        // for (uint i = 0; i < vendorInfo.vendors.length; i++) {
+        //     vendors[vendorInfo.vendors[i]] = Vendor({
+        //         eventId: _eventId,
+        //         vendorPayment: uint32(vendorInfo.vendorPayments[i]),
+        //         confirmServiceDelivery: false,
+        //         paid: false,
+        //         isActive: true,
+        //         isTerminated: false,
+        //         disputeRaised: false
+        //     });
+        //     emit VendorCreated(vendorInfo.vendors[i], _eventId);
+        // }
     }
 
     // Private function to replace `onlyOrganizer` modifier
@@ -84,15 +84,17 @@ contract VendorAgreement {
 
     function createVendorAgreement(
         uint32 _vendorPayment,
+        string memory _vendorServiceAgreement,
         address _vendorAddress
     ) external {
-        _onlyOrganizer(); // Replacing modifier with function call
+        _onlyOrganizer();
         VendorLibrary.validateAddress(_vendorAddress);
         require(_vendorPayment > 0, "Invalid payment");
 
         vendors[_vendorAddress] = Vendor({
             eventId: eventId,
             vendorPayment: _vendorPayment,
+            vendorServiceAgreement: _vendorServiceAgreement,
             confirmServiceDelivery: false,
             paid: false,
             isActive: true,
@@ -103,7 +105,7 @@ contract VendorAgreement {
     }
 
     function fundAgreement(address vendorAddress) external payable {
-        _onlyOrganizer(); // Replacing modifier with function call
+        _onlyOrganizer();
         VendorLibrary.validateAddress(vendorAddress);
 
         Vendor storage vendor = vendors[vendorAddress];
@@ -114,7 +116,7 @@ contract VendorAgreement {
     }
 
     function confirmServiceDelivered(address vendorAddress) external {
-        _onlyOrganizer(); // Replacing modifier with function call
+        _onlyOrganizer();
         VendorLibrary.validateAddress(vendorAddress);
 
         Vendor storage vendor = vendors[vendorAddress];
@@ -125,7 +127,7 @@ contract VendorAgreement {
     }
 
     function releasePayment(address vendorAddress) external {
-        _onlyOrganizer(); // Replacing modifier with function call
+        _onlyOrganizer();
         VendorLibrary.validateAddress(vendorAddress);
 
         Vendor storage vendor = vendors[vendorAddress];
@@ -159,7 +161,7 @@ contract VendorAgreement {
         address vendorAddress,
         bool decisionForVendor
     ) external {
-        _onlyArbitrator(); // Replacing modifier with function call
+        _onlyArbitrator();
         VendorLibrary.validateAddress(vendorAddress);
 
         Vendor storage vendor = vendors[vendorAddress];
@@ -182,7 +184,7 @@ contract VendorAgreement {
     }
 
     function terminateAgreement(address vendorAddress) external {
-        _onlyOrganizer(); // Replacing modifier with function call
+        _onlyOrganizer();
         VendorLibrary.validateAddress(vendorAddress);
 
         Vendor storage vendor = vendors[vendorAddress];

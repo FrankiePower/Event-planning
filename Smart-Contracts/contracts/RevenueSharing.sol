@@ -33,41 +33,42 @@ contract RevenueSharing {
     constructor(
         // address[] memory _stakeholders,
         // uint[] memory _shares,
-        EventManagerFactory.RevenueInfo revenueInfo,
+        // EventManagerFactory.RevenueInfo revenueInfo,
         address _organizer,
         address _ticketContractAddress
     ) {
-        require(
-            revenueInfo.stakeholders.length ==
-                revenueInfo.sharingPercentage.length,
-            "Stakeholder data mismatch."
-        );
+        // require(
+        //     revenueInfo.stakeholders.length ==
+        //         revenueInfo.sharingPercentage.length,
+        //     "Stakeholder data mismatch."
+        // );
         organizer = _organizer;
         ticketContractAddress = _ticketContractAddress;
 
-        for (uint i = 0; i < revenueInfo.stakeholders.length; i++) {
-            require(
-                revenueInfo.sharingPercentage[i] > 0 && revenueInfo.sharingPercentage[i] <= 100,
-                "Invalid share percentage."
-            );
-            stakeholders[revenueInfo.stakeholders[i]] = Stakeholder({
-                share: revenueInfo.stakeholders[i],
-                amountReceived: 0,
-                isPaid: false
-            });
-            stakeholderAddresses.push(revenueInfo.stakeholders[i]);
-        }
+        // for (uint i = 0; i < revenueInfo.stakeholders.length; i++) {
+        //     require(
+        //         revenueInfo.sharingPercentage[i] > 0 &&
+        //             revenueInfo.sharingPercentage[i] <= 100,
+        //         "Invalid share percentage."
+        //     );
+        //     stakeholders[revenueInfo.stakeholders[i]] = Stakeholder({
+        //         share: revenueInfo.stakeholders[i],
+        //         amountReceived: 0,
+        //         isPaid: false
+        //     });
+        //     stakeholderAddresses.push(revenueInfo.stakeholders[i]);
+        // }
     }
 
     // Interface for the ticket contract to retrieve total revenue
-    interface ITicketContract {
-        function getTotalRevenue() external view returns (uint);
-    }
+    // interface ITicketContract {
+    //     function getTotalRevenue() external view returns (uint);
+    // }
 
     // Distributes revenue to stakeholders based on their share
-    function distributeRevenue() external onlyOrganizer eventNotFinalized {
-        ITicketContract ticketContract = ITicketContract(ticketContractAddress);
-        uint totalRevenue = ticketContract.getTotalRevenue(); // Get the total revenue from the ticket contract
+    function distributeRevenue(uint16 totalRevenue) external onlyOrganizer eventNotFinalized {
+        // ITicketContract ticketContract = ITicketContract(ticketContractAddress);
+        // uint totalRevenue = ticketContract.getTotalRevenue(); // Get the total revenue from the ticket contract
 
         require(totalRevenue > 0, "Revenue must be greater than zero.");
 

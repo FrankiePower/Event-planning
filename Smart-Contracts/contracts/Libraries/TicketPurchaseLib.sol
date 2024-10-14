@@ -3,15 +3,11 @@ pragma solidity ^0.8.21;
 
 import "../TicketBase.sol";
 import "../Utils/Errors.sol";
+import "../Libraries/TicketLib.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 library TicketPurchaseLib {
-    struct TicketTier {
-        uint price;
-        uint totalAvailable;
-        uint ticketsSold;
-        bytes32 ticketTierIpfshash;
-    }
+    
 
     struct Attendee {
         uint amountPaid;
@@ -21,7 +17,7 @@ library TicketPurchaseLib {
     }
 
     function buyTicket(
-        mapping(uint => TicketTier) storage ticketTiers,
+        mapping(uint => TicketLib.TicketTier) storage ticketTiers,
         mapping(address => Attendee) storage attendees,
         IERC20 token,
         uint tierIndex,
@@ -39,7 +35,7 @@ library TicketPurchaseLib {
             uint newTotalTokenRevenue
         )
     {
-        TicketTier storage tier = ticketTiers[tierIndex];
+        TicketLib.TicketTier storage tier = ticketTiers[tierIndex];
         require(tier.ticketsSold < tier.totalAvailable, "No tickets available");
         require(totalTicketsSold < totalTickets, "All tickets sold");
 

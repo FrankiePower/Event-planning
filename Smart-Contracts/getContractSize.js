@@ -6,6 +6,7 @@ const contractNames = [
   "SponsorAgreement",
   "Ticket",
   "VendorAgreement",
+  "TicketBase",
 ]; // Add your contract names here
 
 contractNames.forEach((contract) => {

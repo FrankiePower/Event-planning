@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import "./TicketBase.sol";
 import "./Libraries/EventCreationLib.sol";
+import "./Libraries/TicketLib.sol";
 import "./Libraries/TicketPurchaseLib.sol";
 import "./Libraries/RefundLib.sol";
 import "./Libraries/RevenueDistributionLib.sol";
@@ -19,47 +20,48 @@ contract Ticket is TicketBase, ERC721URIStorage {
     uint public totalEtherRevenue;
     uint public totalTokenRevenue;
 
-    mapping(uint => TicketPurchaseLib.TicketTier) public ticketTiers;
+    mapping(uint => TicketLib.TicketTier) public ticketTiers;
     mapping(address => TicketPurchaseLib.Attendee) public ticketAttendees; // For ticket purchases
     mapping(address => RefundLib.Attendee) public refundAttendees; // For refunds
     mapping(address => RevenueDistributionLib.Stakeholder) public stakeholders;
     mapping(uint => address) public stakeholderAddresses;
 
+    uint8[] public currentTicketShares;
+
     uint public ticketTierCount;
     uint public stakeholdersCount;
 
+    struct RevenueInfo {
+        address[] stakeholders;
+        uint[] sharingPercentage;
+    }
+
+    event StakeHolderAdded(address stakeholder, uint8 sharegiven);
+
     constructor(
-        uint32 _eventId,
-        uint _totalTickets,
-        EventCreationLib.TicketInfo memory ticketInfo,
-        EventCreationLib.RevenueInfo memory revenueInfo,
+        uint16 _eventId,
         address _organizer,
+        uint16 _totalTickets,
         address _paymentTokenAddress
     ) TicketBase(_eventId, _totalTickets, _organizer) {
         token = IERC20(_paymentTokenAddress);
+    }
 
-        ticketTierCount = ticketInfo.tierNames.length;
-        stakeholdersCount = revenueInfo.stakeholders.length;
-
-        for (uint i = 0; i < ticketTierCount; i++) {
-            ticketTiers[i] = TicketPurchaseLib.TicketTier({
-                price: ticketInfo.tierPrices[i],
-                totalAvailable: ticketInfo.tierAvailability[i],
-                ticketsSold: 0,
-                ticketTierIpfshash: bytes32(ticketInfo.ticketTierIpfshash[i])
-            });
-        }
-
-        for (uint i = 0; i < stakeholdersCount; i++) {
-            stakeholders[revenueInfo.stakeholders[i]] = RevenueDistributionLib
-                .Stakeholder({
-                    share: revenueInfo.sharingPercentage[i],
-                    amountReceived: 0,
-                    isPaid: false
-                });
-
-            stakeholderAddresses[i] = revenueInfo.stakeholders[i];
-        }
+    function addTicketTier(
+        uint tierIndex,
+        string memory _tierName,
+        uint16 price,
+        uint16 totalAvailable,
+        string memory ticketTierIpfshash
+    ) external onlyOrganizer {
+        TicketLib.addTicketTier(
+            ticketTiers,
+            tierIndex,
+            _tierName,
+            price,
+            totalAvailable,
+            ticketTierIpfshash
+        );
     }
 
     function buyTicket(uint tierIndex, uint tokenAmount) external payable {
@@ -89,8 +91,26 @@ contract Ticket is TicketBase, ERC721URIStorage {
 
     function claimRefundTicket() external eventTerminated {
         // Ensure the attendee has a valid amount paid before claiming a refund
-        require(refundAttendees[msg.sender].amountPaid > 0, "No amount to refund");
+        require(
+            refundAttendees[msg.sender].amountPaid > 0,
+            "No amount to refund"
+        );
         RefundLib.claimRefund(refundAttendees, token); // Pass the correct mapping
+    }
+
+    function addStakeHolderToEvent(
+        address _stakeholderAddress,
+        uint8 sharePercent
+    ) external onlyOrganizer {
+        RevenueDistributionLib.addStakeholderToEvent(
+            _stakeholderAddress,
+            sharePercent,
+            currentTicketShares,
+            stakeholders,
+            stakeholderAddresses
+        );
+
+        emit StakeHolderAdded(_stakeholderAddress, sharePercent);
     }
 
     function distributeRevenue(
@@ -111,7 +131,7 @@ contract Ticket is TicketBase, ERC721URIStorage {
     function _mintTicket(
         address buyer,
         uint ticketId,
-        bytes32 ticketIpfsHash
+        string memory ticketIpfsHash
     ) internal {
         _safeMint(buyer, ticketId); // Mint the ticket in the contract itself
         _setTokenURI(
