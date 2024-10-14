@@ -30,4 +30,20 @@ library Error {
     error IncorrectPaymentAmount();
     error AllTicketSoldOut();
     error InsufficientFunds();
+    error TokenTransferFailed();
+    error InvalidVendorPayment();
+    error VendorTerminated();
+    error ConfirmVendorService();
+    error VendorNotFound();
+    error VendorPaymentFailed();
+    error InsufficientEscrowbalance();
+    error InvalidPaymentAmount();
+    error CannotDisburseFundsTwice();
+    error OnlyVendorOrOrganizer();
+    error DisputeALreadyRaised();
+    error NoDisputeRaisedForVendor();
+    error NoFundsToRelease();
+    error CouldNotReleaseVendorPayment();
+    error CouldNotRefundOrganizer();
+    error TicketMustBeGreaterThanZero();
 }
