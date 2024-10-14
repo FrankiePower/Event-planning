@@ -2,6 +2,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function BackgroundWrapper({
   children,
