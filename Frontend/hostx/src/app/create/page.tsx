@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ImageSelector } from "@/components/fragments/ImageSelector";
+import { DatePickerWithRange } from "@/components/fragments/DatePicker";
 //import { useRouter } from "next/router";
 import {
   MapPin,
@@ -19,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { CardWithForm } from "@/components/fragments/NFTCard";
+import TicketDropdown from "@/components/fragments/TicketDropdown";
 
 const EventOptionItem = ({ icon: Icon, label, children }) => (
   <div className="flex items-center justify-between rounded-xl p-3">
@@ -36,7 +39,7 @@ const Page = () => {
     eventName: "",
     location: "",
     description: "",
-    tickets: "Free",
+    tickets: "",
     requireApproval: false,
     capacity: "",
     calendar: "Personal Calendar",
@@ -66,8 +69,9 @@ const Page = () => {
 
   return (
     <div className="flex m-auto max-w-[960px] gap-8 p-4">
-      <div>
+      <div className="flex flex-col gap-4">
         <ImageSelector />
+        <CardWithForm />
       </div>
       <form onSubmit={handleSubmit} className="w-auto max-w-2xl">
         <div className="grid grid-cols-1 gap-6">
@@ -135,6 +139,10 @@ const Page = () => {
             placeholder="Event Name"
             className="text-4xl bg-transparent border-none outline-none"
           />
+          <div className="flex justify-between bg-white bg-opacity-10 rounded-xl p-3">
+            <DatePickerWithRange />
+            {/*  <TimePickerwithRange /> */}
+          </div>
 
           <div className="grid grid-cols-1 gap-2 bg-white bg-opacity-10 rounded-xl p-3">
             <div className="flex items-center justify-between bg-none p-3 w-80">
@@ -161,7 +169,7 @@ const Page = () => {
                 value={formData.location}
                 onChange={handleInputChange}
                 type="text"
-                placeholder="Add Event Location"
+                placeholder="Add Event Location or Paste Zoom Link"
                 className="bg-transparent outline-none w-full"
               />
             </div>
@@ -173,7 +181,7 @@ const Page = () => {
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Add Description"
-              className="bg-transparent text-white rounded-lg w-full border-none outline-none"
+              className="bg-transparent text-white text-lg border-none focus:ring-0"
             />
           </div>
 
@@ -181,6 +189,15 @@ const Page = () => {
             <h3 className="text-lg font-semibold mb-2">Event Options</h3>
             <EventOptionItem icon={Ticket} label="Tickets">
               <span>{formData.tickets}</span>
+              <input
+                name="capacity"
+                value={formData.capacity}
+                onChange={handleInputChange}
+                type="number"
+                className="bg-transparent w-24 text-right"
+                placeholder="Unlimited"
+              />
+              {/* <TicketDropdown onTicketChange={undefined} /> */}
             </EventOptionItem>
 
             <EventOptionItem icon={Users} label="Require Approval">

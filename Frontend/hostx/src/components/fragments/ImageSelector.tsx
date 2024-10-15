@@ -24,7 +24,7 @@ export function ImageSelector() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Image src={zoro} alt="zoro" width={330} className="rounded-xl" />
+        <Image src={zoro} alt="zoro" width={350} className="rounded-xl" />
       </DialogTrigger>
 
       <DialogContent className="w-full bg-black bg-opacity-80">
