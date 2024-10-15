@@ -1,8 +1,9 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-// import CustomConnectButton from "./ConnectButton";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import CustomConnectButton from "./ConnectButton";
+// import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const Navbar = () => {
   return (
@@ -35,8 +36,8 @@ const Navbar = () => {
               </svg>
             </Link>
             {/*   <button className="py-2 px-3 sm:px-4 bg-stone-700 rounded-3xl text-sm text-stone-300 hover:bg-stone-400 hover:text-stone-700"></button> */}
-            <ConnectButton />
-            {/* <CustomConnectButton /> */}
+            {/* <ConnectButton /> */}
+            <CustomConnectButton />
           </div>
         </nav>
       </header>

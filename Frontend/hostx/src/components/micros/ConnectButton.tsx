@@ -1,3 +1,4 @@
+"use client";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function CustomConnectButton() {
@@ -28,7 +29,7 @@ export default function CustomConnectButton() {
             <button
               onClick={openConnectModal}
               type="button"
-              className="bg-[#131313B2] text-white py-2 px-5 rounded-lg">
+              className="py-2 px-3 sm:px-4 bg-stone-700 rounded-3xl text-sm text-stone-300 hover:bg-stone-400 hover:text-stone-700">
               Connect Wallet
             </button>
           );
@@ -36,7 +37,7 @@ export default function CustomConnectButton() {
 
         if (chain.unsupported) {
           return (
-            <button onClick={openChainModal} type="button">
+            <button onClick={openChainModal} type="button" className="py-2 px-3 sm:px-4 bg-stone-700 rounded-3xl text-sm text-stone-300 hover:bg-stone-400 hover:text-stone-700">
               Wrong network
             </button>
           );
@@ -53,7 +54,7 @@ export default function CustomConnectButton() {
               border: "none",
               cursor: "pointer",
             }}
-            className="bg-[#131313B2] space-x-2 text-white py-2 px-5 rounded-[2rem]">
+            className="py-2 px-3 sm:px-4 bg-stone-700 rounded-3xl text-sm text-stone-300 hover:bg-stone-400 hover:text-stone-700">
             <p>
               {" "}
               {account.address.slice(0, 6)}...{account.address.slice(-4)}
