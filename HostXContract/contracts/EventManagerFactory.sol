@@ -3,8 +3,22 @@ pragma solidity ^0.8.21;
 import "./EventContract.sol";
 
 contract EventManagerFactory {
-    address[] public events;
-    mapping(address => address[]) public eventOrganizers;
+    uint256 public eventCounter;
+    mapping(uint256 => EventContract) public events;
+
+    //Get Organizer Event
+    mapping(address => EventContract[]) public organizerEvent;
+
+    event EventCreated(
+        address organizer,
+        string name,
+        string description,
+        string venue,
+        string image,
+        uint256 startDate,
+        uint256 endDate,
+        uint16 totalTicketAvailable
+    );
 
     function createEvent(
         // address _organizer,
@@ -18,7 +32,7 @@ contract EventManagerFactory {
         uint256 _startDate,
         uint256 _endDate,
         uint16 _totalTicketAvailable
-    ) public returns (address) {
+    ) public returns (EventContract) {
         EventContract newEvent = new EventContract(
             msg.sender,
             paymentTokenAddress,
@@ -32,8 +46,22 @@ contract EventManagerFactory {
             _endDate,
             _totalTicketAvailable
         );
-        events.push(address(newEvent));
-        eventOrganizers[msg.sender].push(address(newEvent));
-        return address(newEvent);
+
+        eventCounter++;
+        events[eventCounter] = newEvent;
+        organizerEvent[msg.sender].push(newEvent);
+
+        emit EventCreated(
+            msg.sender,
+            _name,
+            _description,
+            _venue,
+            _image,
+            _startDate,
+            _endDate,
+            _totalTicketAvailable
+        );
+
+        return newEvent;
     }
 }
