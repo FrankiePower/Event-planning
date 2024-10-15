@@ -26,7 +26,6 @@ const config: HardhatUserConfig = {
         runs: 200, // Try adjusting the number of runs
       },
       // viaIR: true, // Enable IR-based compilation
-
     },
   },
   etherscan: {
