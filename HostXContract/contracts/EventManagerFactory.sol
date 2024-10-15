@@ -4,6 +4,7 @@ import "./EventContract.sol";
 
 contract EventManagerFactory {
     address[] public events;
+    mapping(address => address[]) public eventOrganizers;
 
     function createEvent(
         // address _organizer,
@@ -32,6 +33,7 @@ contract EventManagerFactory {
             _totalTicketAvailable
         );
         events.push(address(newEvent));
+        eventOrganizers[msg.sender].push(address(newEvent));
         return address(newEvent);
     }
 }
