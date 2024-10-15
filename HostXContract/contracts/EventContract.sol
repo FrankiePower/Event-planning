@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract EventContract is ERC721URIStorage {
-    
     enum EventStatus {
         Upcoming,
         Ongoing,
@@ -161,7 +160,7 @@ contract EventContract is ERC721URIStorage {
         uint256 _ticketPrice,
         uint16 _totalTicketAvailable,
         string memory _ticketURI
-    ) external {
+    ) external onlyOrganizer {
         require(bytes(_ticketName).length > 0, "Ticket name is required");
         require(_ticketPrice >= 0, "Invalid Ticket Price");
         require(
