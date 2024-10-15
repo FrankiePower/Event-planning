@@ -12,6 +12,10 @@ contract EventContract is ERC721URIStorage {
         Completed,
         Terminated
     }
+    enum VendorStatus {
+        active,
+        terminated
+    }
 
     struct Event {
         address organizer;
@@ -50,6 +54,7 @@ contract EventContract is ERC721URIStorage {
         uint256 paymentAmount;
         bool serviceDelivered;
         bool isPaid;
+        VendorStatus status;
     }
 
     mapping(uint16 => Event) events;
@@ -80,6 +85,7 @@ contract EventContract is ERC721URIStorage {
     event RefundClaimed(uint256 amount, address buyer);
     event VendorAdded(address vendor, uint256 amountPayable);
     event ApproveVendorAgreement(bool agreed);
+    event VendorTerminated(uint16 eventId);
 
     constructor(
         address _organizer,
@@ -154,7 +160,7 @@ contract EventContract is ERC721URIStorage {
         uint256 _ticketPrice,
         uint16 _totalTicketAvailable,
         string memory _ticketURI
-    ) external {
+    ) external onlyOrganizer {
         require(bytes(_ticketName).length > 0, "Ticket name is required");
         require(_ticketPrice >= 0, "Invalid Ticket Price");
         require(
@@ -192,6 +198,7 @@ contract EventContract is ERC721URIStorage {
             bytes(ticketTierIdToTicket[_tierId].ticketURI).length > 0,
             "Invalid Tier ID"
         );
+
         TicketTier memory tier = ticketTierIdToTicket[_tierId];
         uint256 ticketCost = tier.price;
         require(
@@ -204,7 +211,6 @@ contract EventContract is ERC721URIStorage {
         );
 
         uint256 ticketId = nextTicketId;
-
         Ticket storage tk = tickets[ticketId];
 
         tk.buyer = msg.sender;
@@ -255,6 +261,7 @@ contract EventContract is ERC721URIStorage {
         emit RefundClaimed(amount, msg.sender);
     }
 
+    //Vendor Agreement contract here.
     function addVendor(
         address _vendorAddress,
         string memory _name,
@@ -281,6 +288,7 @@ contract EventContract is ERC721URIStorage {
         ven.vendorService = _vendorService;
         ven.paymentAmount = _paymentAmount;
         ven.vendorAddress = _vendorAddress;
+        ven.status = VendorStatus.active;
 
         eventVendors[eventCount].push(_vendorId);
         vendorCount++;
@@ -293,6 +301,7 @@ contract EventContract is ERC721URIStorage {
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
         Vendor storage ven = vendors[_vendorAddress];
+        require(ven.status != VendorStatus.terminated, "Venodr Terminated");
         ven.serviceDelivered = true;
         ven.isPaid = true;
         //Pay Vendor if vendor needs to be paid;
@@ -301,6 +310,17 @@ contract EventContract is ERC721URIStorage {
             token.transfer(ven.vendorAddress, amountToPay);
         }
         emit ApproveVendorAgreement(true);
+    }
+
+    function terminateVendorAgreement(
+        address _vendorAddress
+    ) external onlyOrganizer {
+        require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
+        Vendor storage ven = vendors[_vendorAddress];
+        require(!ven.isPaid, "Vendor ALready Paid.");
+        require(!ven.serviceDelivered, "Venodr Service Confirmed.");
+        ven.status = VendorStatus.terminated;
+        emit VendorTerminated(ven.vendorId);
     }
 
     //Sponsor
