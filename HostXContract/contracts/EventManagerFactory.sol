@@ -3,11 +3,11 @@ pragma solidity ^0.8.21;
 import "./EventContract.sol";
 
 contract EventManagerFactory {
+    
     uint256 public eventCounter;
     EventContract[] Events;
-    mapping(uint256 => EventContract) public IdToEvents;
 
-    //Get Organizer Event
+    mapping(uint256 => EventContract) public IdToEvents;
     mapping(address => EventContract[]) public organizerEvent;
 
     event EventCreated(
