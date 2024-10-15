@@ -198,7 +198,7 @@ function OverviewContent() {
                     <div className="w-full p-4 border rounded-xl space-y-5">
                         <div className="flex justify-between items-center w-full">
                             <h4 className="font-semibold text-md">Hosts</h4>
-                            <Button className="rounded bg-stone-950/60 text-gray-300 hover:bg-slate-600">
+                            <Button className="rounded bg-stone-950/60 text-gray-300 hover:bg-stone-600">
                                 <Plus className="mr-2 h-4 w-4" /> Add Host
                             </Button>
                         </div>
@@ -211,7 +211,7 @@ function OverviewContent() {
                     <div className="w-full p-4 border rounded-xl space-y-5">
                         <div className="flex justify-between items-center w-full">
                             <h4 className="font-semibold text-md">Guests</h4>
-                            <Button className="rounded bg-stone-950/60 text-gray-300 hover:bg-slate-600">
+                            <Button className="rounded bg-stone-950/60 text-gray-300 hover:bg-stone-600">
                                 <Plus className="mr-2 h-4 w-4" /> Add Guest
                             </Button>
                         </div>
