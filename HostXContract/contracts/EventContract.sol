@@ -19,6 +19,7 @@ contract EventContract is ERC721URIStorage {
     struct TicketTier {
         string tierName;
         uint256 price;
+        uint16 totalSold;
         uint16 totalTicketAvailable;
         string ticketURI;
     }
@@ -185,6 +186,10 @@ contract EventContract is ERC721URIStorage {
         tk.amountPaid = ticketCost;
         tk.isRefund = false;
 
+        //Ticket Tier Update
+        tier.totalSold++;
+        
+
         nextTicketId++;
 
         _safeMint(msg.sender, ticketId);
@@ -193,6 +198,7 @@ contract EventContract is ERC721URIStorage {
 
         emit TicketBought(ticketId, msg.sender);
     }
+
 
     function validateTicket(
         uint256 _ticketId
@@ -267,16 +273,20 @@ contract EventContract is ERC721URIStorage {
         address _vendorAddress
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
-        
         Vendor storage ven = vendors[_vendorAddress];
         require(ven.status != VendorStatus.terminated, "Venodr Terminated");
+        require(!ven.serviceDelivered, "Vendor Service Confirmed.");
+        require(ven.isPaid == false, "Vendor Already Paid.");
+        
         ven.serviceDelivered = true;
         ven.isPaid = true;
         //Pay Vendor if vendor needs to be paid;
         uint256 amountToPay = ven.paymentAmount;
+
         if (amountToPay > 0) {
             token.transfer(ven.vendorAddress, amountToPay);
         }
+        
         emit ApproveVendorAgreement(true);
     }
 
@@ -284,10 +294,13 @@ contract EventContract is ERC721URIStorage {
         address _vendorAddress
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
+        require(vendors[_vendorAddress].status != VendorStatus.terminated, "Vendor Agreement Terminated");
+        require(vendors[_vendorAddress].isPaid == false, "Vendor Already Paid.");
+        require(vendors[_vendorAddress].serviceDelivered == false, "Vendor Service Confirmed.");
+
         Vendor storage ven = vendors[_vendorAddress];
-        require(!ven.isPaid, "Vendor ALready Paid.");
-        require(!ven.serviceDelivered, "Venodr Service Confirmed.");
         ven.status = VendorStatus.terminated;
+
         emit VendorTerminated(ven.vendorId);
     }
 
