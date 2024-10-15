@@ -110,15 +110,28 @@ contract EventManagerFactory {
 
         // Deploy TicketSales contract with tier data
         address ticketContract = address(
-            new Ticket(eventCount, eventBasicDetails.totalTickets, ticketInfo, eventBasicDetails.organizer)
+            new Ticket(
+                eventCount,
+                eventBasicDetails.totalTickets,
+                ticketInfo,
+                eventBasicDetails.organizer
+            )
         );
 
         address vendorAgreementContract = address(
-            new VendorAgreement(eventCount, vendorInfo, eventBasicDetails.organizer)
+            new VendorAgreement(
+                eventCount,
+                vendorInfo,
+                eventBasicDetails.organizer
+            )
         );
 
         address sponsorAgreementContract = address(
-            new SponsorAgreement(sponsorInfo, eventBasicDetails.organizer)
+            new SponsorAgreement(
+                sponsorInfo,
+                eventCount,
+                eventBasicDetails.organizer
+            )
         );
 
         address revenueSharingContract = address(
