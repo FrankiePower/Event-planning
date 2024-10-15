@@ -16,22 +16,10 @@ contract EventContract is ERC721URIStorage {
         active,
         terminated
     }
-
-    struct Event {
-        address organizer;
-        string name;
-        string description;
-        string venue;
-        string image;
-        uint256 startDate;
-        uint256 endDate;
-        uint16 totalTicketAvailable;
-        EventStatus status;
-    }
-
     struct TicketTier {
         string tierName;
         uint256 price;
+        uint16 totalSold;
         uint16 totalTicketAvailable;
         string ticketURI;
     }
@@ -39,7 +27,6 @@ contract EventContract is ERC721URIStorage {
     struct Ticket {
         uint256 ticketId;
         uint16 ticketTierId;
-        uint16 eventId;
         uint256 amountPaid;
         address buyer;
         bool isRefund;
@@ -57,29 +44,35 @@ contract EventContract is ERC721URIStorage {
         VendorStatus status;
     }
 
-    mapping(uint16 => Event) events;
-    mapping(uint16 => TicketTier) ticketTierIdToTicket;
-    mapping(uint16 => address) attendee; //Ticket Tier ID to User.
-    mapping(uint256 => Ticket) tickets; //TicketID to Ticket Struct
-
-    mapping(address => Vendor) vendors; //Vendor ID to Vendor
-    mapping(uint16 => uint16[]) eventVendors; //EventID to Vendors
-
-    uint16 public eventCount;
     uint16 public ticketTierCount;
-    uint16 public totalTicketTierSize;
     uint256 public nextTicketId = 1; // To generate unique ticket IDs
     uint16 public vendorCount;
     address public organizer;
 
+    string public eventName;
+    string public eventDescription;
+    string public eventVenue;
+    string public eventImage;
+    uint256 public startDate;
+    uint256 public endDate;
+    uint16 public totalTicketAvailable;
+    EventStatus status;
+
+    mapping(uint16 => TicketTier) public ticketTierIdToTicket;
+    mapping(uint16 => address) public attendee; //Ticket Tier ID to User.
+    mapping(uint256 => Ticket) public tickets; //TicketID to Ticket Struct
+
+    mapping(address => Vendor) vendors; //Vendor Address to Vendor
+    mapping(uint16 => Vendor) eventVendors; //VendorID to Vendors
+
     IERC20 public token;
 
-    event EventCreated(uint16 indexed eventId);
     event TicketTierAdded(
         uint16 tierId,
         uint256 price,
         uint16 totalTicketAvailable
     );
+
     event TicketBought(uint256 ticketId, address buyer);
     event TickeValidated(uint256 ticketId, string tierName, address buyer);
     event RefundClaimed(uint256 amount, address buyer);
@@ -100,59 +93,33 @@ contract EventContract is ERC721URIStorage {
         uint256 _endDate,
         uint16 _totalTicketAvailable
     ) ERC721(_NftTokenName, _NftSymbol) {
-        token = IERC20(_tokenAddress);
-        organizer = _organizer;
-        createEvent(
-            _name,
-            _description,
-            _venue,
-            _image,
-            _startDate,
-            _endDate,
-            _totalTicketAvailable
-        );
-    }
-
-    modifier onlyOrganizer() {
-        require(msg.sender == organizer, "Only organizer");
-        _;
-    }
-
-    function createEvent(
-        string memory _name,
-        string memory _description,
-        string memory _venue,
-        string memory _image,
-        uint256 _startDate,
-        uint256 _endDate,
-        uint16 _totalTicketAvailable
-    ) internal {
         require(bytes(_name).length > 0, "Enter Event Name");
+        require(bytes(_NftTokenName).length > 0, "Enter NftTokenName ");
+        require(bytes(_NftSymbol).length > 0, "Enter _NftSymbol");
         require(bytes(_description).length > 0, "Enter Event Description");
         require(bytes(_venue).length > 0, "Enter Event Venue");
         require(bytes(_image).length > 0, "Enter Event Image");
         require(_startDate > 0, "Enter a valid Start Date");
         require(_endDate > 0, "Enter a valid End Date");
-        require(
-            _startDate <= _endDate,
-            "Start Date must be before or equal to End Date"
-        );
-        uint16 _eventId = eventCount + 1;
+        require(_startDate <= _endDate, "Invalid start and end date.");
+        require(_totalTicketAvailable > 0, "Enter ticket available");
 
-        Event storage ev = events[_eventId];
-        ev.organizer = msg.sender;
-        ev.name = _name;
-        ev.description = _description;
-        ev.venue = _venue;
-        ev.image = _image;
-        ev.startDate = _startDate;
-        ev.endDate = _endDate;
-        ev.status = EventStatus.Upcoming;
-        ev.totalTicketAvailable = _totalTicketAvailable;
+        token = IERC20(_tokenAddress);
+        organizer = _organizer;
+        eventName = _name;
+        eventDescription = _description;
+        eventVenue = _venue;
+        eventImage = _image;
+        startDate = _startDate;
+        endDate = _endDate;
+        totalTicketAvailable = _totalTicketAvailable;
+        status = EventStatus.Upcoming;
+        
+    }
 
-        eventCount++;
-
-        emit EventCreated(eventCount);
+    modifier onlyOrganizer() {
+        require(msg.sender == organizer, "Only organizer");
+        _;
     }
 
     function addTicketTier(
@@ -169,13 +136,13 @@ contract EventContract is ERC721URIStorage {
         );
         require(bytes(_ticketURI).length > 0, "Ticket URI is required");
         //get allocated Ticket Size
-        uint16 newTicketSize = totalTicketTierSize + _totalTicketAvailable;
+        uint16 newTicketSize = totalTicketAvailable + _totalTicketAvailable;
         require(
-            newTicketSize <= events[eventCount].totalTicketAvailable,
+            newTicketSize <= totalTicketAvailable,
             "Max event size exceeded"
         );
 
-        totalTicketTierSize = newTicketSize;
+        totalTicketAvailable = newTicketSize;
 
         uint16 _ticketTierCount = ticketTierCount + 1;
         TicketTier storage tier = ticketTierIdToTicket[_ticketTierCount];
@@ -214,11 +181,14 @@ contract EventContract is ERC721URIStorage {
         Ticket storage tk = tickets[ticketId];
 
         tk.buyer = msg.sender;
-        tk.eventId = eventCount;
         tk.ticketId = ticketId;
         tk.ticketTierId = _tierId;
         tk.amountPaid = ticketCost;
         tk.isRefund = false;
+
+        //Ticket Tier Update
+        tier.totalSold++;
+        
 
         nextTicketId++;
 
@@ -229,12 +199,14 @@ contract EventContract is ERC721URIStorage {
         emit TicketBought(ticketId, msg.sender);
     }
 
+
     function validateTicket(
         uint256 _ticketId
     ) external returns (uint256, string memory) {
         require(tickets[_ticketId].ticketId != 0, "Invalid Ticket ID");
         require(ownerOf(_ticketId) == msg.sender, "Address does not have NFT.");
         Ticket memory tick = tickets[_ticketId];
+        require(tick.isRefund == false, "Ticket Refunded");
         emit TickeValidated(
             _ticketId,
             ticketTierIdToTicket[tick.ticketTierId].tierName,
@@ -245,15 +217,13 @@ contract EventContract is ERC721URIStorage {
 
     function claimRefund(uint256 _ticketId) external {
         //Check if event is terminated
-        require(
-            events[eventCount].status == EventStatus.Terminated,
-            "Event is still on-going."
-        );
+        require(status == EventStatus.Terminated, "Event is still on-going.");
         //Check if user has claimed refund,
         Ticket memory tick = tickets[_ticketId];
         require(tick.buyer == msg.sender, "Not owner of ticket");
         require(!tick.isRefund, "Token refunded");
         //Refund Logic
+        tick.isRefund = true;
         uint256 amount = tick.amountPaid;
         require(token.transfer(msg.sender, amount), "Token refund failed");
         // Burn the NFT (take it back)
@@ -269,16 +239,18 @@ contract EventContract is ERC721URIStorage {
         string memory _vendorService,
         uint256 _paymentAmount
     ) external onlyOrganizer {
+        require(_vendorAddress != address(0), "Invalid Vendor Address");
         require(bytes(_name).length > 0, "Vendor name is empty");
         require(bytes(_vendorImg).length > 0, "Vendor image is empty");
         require(
             bytes(_vendorService).length > 0,
-            "Vendor service description is empty"
+            "Service description is empty"
         );
         require(
             _paymentAmount >= 0,
             "Payment amount must be greater than zero"
         );
+        require(vendors[_vendorAddress].vendorId == 0, "Vendor already added");
 
         uint16 _vendorId = vendorCount + 1;
         Vendor storage ven = vendors[_vendorAddress];
@@ -290,7 +262,8 @@ contract EventContract is ERC721URIStorage {
         ven.vendorAddress = _vendorAddress;
         ven.status = VendorStatus.active;
 
-        eventVendors[eventCount].push(_vendorId);
+        eventVendors[_vendorId] = ven;
+
         vendorCount++;
 
         emit VendorAdded(_vendorAddress, _paymentAmount);
@@ -302,13 +275,18 @@ contract EventContract is ERC721URIStorage {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
         Vendor storage ven = vendors[_vendorAddress];
         require(ven.status != VendorStatus.terminated, "Venodr Terminated");
+        require(!ven.serviceDelivered, "Vendor Service Confirmed.");
+        require(ven.isPaid == false, "Vendor Already Paid.");
+        
         ven.serviceDelivered = true;
         ven.isPaid = true;
         //Pay Vendor if vendor needs to be paid;
         uint256 amountToPay = ven.paymentAmount;
+
         if (amountToPay > 0) {
             token.transfer(ven.vendorAddress, amountToPay);
         }
+        
         emit ApproveVendorAgreement(true);
     }
 
@@ -316,10 +294,13 @@ contract EventContract is ERC721URIStorage {
         address _vendorAddress
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
+        require(vendors[_vendorAddress].status != VendorStatus.terminated, "Vendor Agreement Terminated");
+        require(vendors[_vendorAddress].isPaid == false, "Vendor Already Paid.");
+        require(vendors[_vendorAddress].serviceDelivered == false, "Vendor Service Confirmed.");
+
         Vendor storage ven = vendors[_vendorAddress];
-        require(!ven.isPaid, "Vendor ALready Paid.");
-        require(!ven.serviceDelivered, "Venodr Service Confirmed.");
         ven.status = VendorStatus.terminated;
+
         emit VendorTerminated(ven.vendorId);
     }
 
