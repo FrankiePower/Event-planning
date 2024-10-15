@@ -4,7 +4,8 @@ import "./EventContract.sol";
 
 contract EventManagerFactory {
     uint256 public eventCounter;
-    mapping(uint256 => EventContract) public events;
+    EventContract[] Events;
+    mapping(uint256 => EventContract) public IdToEvents;
 
     //Get Organizer Event
     mapping(address => EventContract[]) public organizerEvent;
@@ -48,8 +49,10 @@ contract EventManagerFactory {
         );
 
         eventCounter++;
-        events[eventCounter] = newEvent;
-        organizerEvent[msg.sender].push(newEvent);
+
+        IdToEvents[eventCounter] = newEvent; //Holds clones of event contracts by Id
+        Events.push(newEvent); // Holds all the event contracts
+        organizerEvent[msg.sender].push(newEvent); //All event of an organizer
 
         emit EventCreated(
             msg.sender,
@@ -63,5 +66,9 @@ contract EventManagerFactory {
         );
 
         return newEvent;
+    }
+
+    function getEvents() external view returns (EventContract[] memory) {
+        return Events;
     }
 }
