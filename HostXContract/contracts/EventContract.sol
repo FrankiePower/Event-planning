@@ -71,6 +71,7 @@ contract EventContract is ERC721URIStorage {
         uint256 price,
         uint16 totalTicketAvailable
     );
+
     event TicketBought(uint256 ticketId, address buyer);
     event TickeValidated(uint256 ticketId, string tierName, address buyer);
     event RefundClaimed(uint256 amount, address buyer);
@@ -199,6 +200,7 @@ contract EventContract is ERC721URIStorage {
         require(tickets[_ticketId].ticketId != 0, "Invalid Ticket ID");
         require(ownerOf(_ticketId) == msg.sender, "Address does not have NFT.");
         Ticket memory tick = tickets[_ticketId];
+        require(tick.isRefund == false, "Ticket Refunded");
         emit TickeValidated(
             _ticketId,
             ticketTierIdToTicket[tick.ticketTierId].tierName,
@@ -215,6 +217,7 @@ contract EventContract is ERC721URIStorage {
         require(tick.buyer == msg.sender, "Not owner of ticket");
         require(!tick.isRefund, "Token refunded");
         //Refund Logic
+        tick.isRefund = true;
         uint256 amount = tick.amountPaid;
         require(token.transfer(msg.sender, amount), "Token refund failed");
         // Burn the NFT (take it back)
@@ -230,16 +233,18 @@ contract EventContract is ERC721URIStorage {
         string memory _vendorService,
         uint256 _paymentAmount
     ) external onlyOrganizer {
+        require(_vendorAddress != address(0), "Invalid Vendor Address");
         require(bytes(_name).length > 0, "Vendor name is empty");
         require(bytes(_vendorImg).length > 0, "Vendor image is empty");
         require(
             bytes(_vendorService).length > 0,
-            "Vendor service description is empty"
+            "Service description is empty"
         );
         require(
             _paymentAmount >= 0,
             "Payment amount must be greater than zero"
         );
+        require(vendors[_vendorAddress].vendorId == 0, "Vendor already added");
 
         uint16 _vendorId = vendorCount + 1;
         Vendor storage ven = vendors[_vendorAddress];
@@ -262,6 +267,7 @@ contract EventContract is ERC721URIStorage {
         address _vendorAddress
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
+        
         Vendor storage ven = vendors[_vendorAddress];
         require(ven.status != VendorStatus.terminated, "Venodr Terminated");
         ven.serviceDelivered = true;
