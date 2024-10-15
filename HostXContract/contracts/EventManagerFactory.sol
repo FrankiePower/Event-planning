@@ -22,7 +22,6 @@ contract EventManagerFactory {
     );
 
     function createEvent(
-        // address _organizer,
         address paymentTokenAddress,
         string memory _NftTokenName,
         string memory _NftSymbol,
