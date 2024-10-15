@@ -5,6 +5,9 @@ import "./globals.css";
 import Navbar from "@/components/micros/Navbar";
 import Footer from "@/components/micros/Footer";
 import BackgroundWrapper from "@/components/micros/BackgroundWrapper";
+import Providers from "@/context/Providers";
+import "@rainbow-me/rainbowkit/styles.css";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,11 +36,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <BackgroundWrapper>
-          <Navbar />
-          {children}
-          <Footer />
-        </BackgroundWrapper>
+        <Providers>
+          <BackgroundWrapper>
+            <RainbowKitProvider modalSize="compact">
+              <Navbar />
+              {children}
+              <Footer />
+            </RainbowKitProvider>
+          </BackgroundWrapper>{" "}
+        </Providers>
       </body>
     </html>
   );
