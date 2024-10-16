@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useContext } from "react";
-
+import { useWriteContract, useAccount, useSimulateContract } from "wagmi";
+import { parseUnits } from "viem";
 import { UrlContext } from "@/context/UrlContext";
 import { DatePickerWithRange } from "@/components/fragments/DatePicker";
-//import { useRouter } from "next/router";
 import {
   MapPin,
   FileText,
@@ -22,7 +22,75 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { CardWithForm } from "@/components/fragments/NFTCard";
-import TicketDropdown from "@/components/fragments/TicketDropdown";
+
+const ABI = [
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "paymentTokenAddress",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "_NftTokenName",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_NftSymbol",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_description",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_venue",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_image",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "_startDate",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_endDate",
+        type: "uint256",
+      },
+      {
+        internalType: "uint16",
+        name: "_totalTicketAvailable",
+        type: "uint16",
+      },
+    ],
+    name: "createEvent",
+    outputs: [
+      {
+        internalType: "contract EventContract",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+];
+
+const CONTRACT_ADDRESS = "0xE604Dbf839c5f69116CFB5303E5f0f604F8562ad";
 
 const EventOptionItem = ({ icon: Icon, label, children }) => (
   <div className="flex items-center justify-between rounded-xl p-3">
@@ -36,18 +104,49 @@ const EventOptionItem = ({ icon: Icon, label, children }) => (
 
 const Page = () => {
   const { url, nftName, nftSymbol, selectedToken } = useContext(UrlContext);
-  //const router = useRouter();
+  const { address } = useAccount();
   const [formData, setFormData] = useState({
+    paymentTokenAddress: "",
+    nftTokenName: "",
+    nftSymbol: "",
     eventName: "",
-    location: "",
     description: "",
-    tickets: "",
+    venue: "",
+    image: url,
+    startDate: null,
+    endDate: null,
+    totalTicketAvailable: "",
     requireApproval: false,
-    capacity: "",
     calendar: "Personal Calendar",
     visibility: "Public",
     isVirtual: false,
   });
+
+  const { data: simulateData, error: simulateError } = useSimulateContract({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    functionName: "createEvent",
+    args: [
+      selectedToken,
+      nftName,
+      nftSymbol,
+      formData.eventName,
+      formData.description,
+      formData.venue,
+      formData.image,
+      formData.startDate ? Math.floor(formData.startDate.getTime() / 1000) : 0,
+      formData.endDate ? Math.floor(formData.endDate.getTime() / 1000) : 0,
+      parseInt(formData.totalTicketAvailable) || 0,
+    ],
+    account: address,
+  });
+
+  const {
+    writeContract,
+    error: writeError,
+    isLoading,
+    isSuccess,
+  } = useWriteContract();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -58,15 +157,24 @@ const Page = () => {
     setFormData((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.eventName || !formData.location || !formData.description) {
+    if (!formData.eventName || !formData.venue || !formData.description) {
       alert("Please fill in all required fields");
       return;
     }
 
+    if (simulateError) {
+      console.error("Simulation error:", simulateError);
+      return;
+    }
+
+    try {
+      await writeContract(simulateData.request);
+    } catch (error) {
+      console.error("Error creating event:", error);
+    }
     console.log("Form submitted:", formData);
-    //router.push(`/events/${encodeURIComponent(formData.eventName)}`);
   };
 
   return (
@@ -133,6 +241,33 @@ const Page = () => {
           </div>
 
           <input
+            name="paymentTokenAddress"
+            value={selectedToken}
+            onChange={handleInputChange}
+            type="text"
+            placeholder="Payment Token Address"
+            className="bg-white bg-opacity-10 rounded-xl p-3"
+          />
+          <input
+            name="nftTokenName"
+            value={nftName}
+            onChange={handleInputChange}
+            type="text"
+            placeholder="NFT Token Name"
+            className="bg-white bg-opacity-10 rounded-xl p-3"
+          />
+
+          {/* NFT Symbol */}
+          <input
+            name="nftSymbol"
+            value={nftSymbol}
+            onChange={handleInputChange}
+            type="text"
+            placeholder="NFT Symbol"
+            className="bg-white bg-opacity-10 rounded-xl p-3"
+          />
+
+          <input
             name="eventName"
             value={formData.eventName}
             onChange={handleInputChange}
@@ -142,7 +277,15 @@ const Page = () => {
           />
 
           <div className="flex justify-between bg-white bg-opacity-10 rounded-xl p-3">
-            <DatePickerWithRange />
+            <DatePickerWithRange
+              onChange={(dates) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  startDate: dates.from,
+                  endDate: dates.to,
+                }));
+              }}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-2 bg-white bg-opacity-10 rounded-xl p-3">
@@ -167,10 +310,10 @@ const Page = () => {
               <MapPin className="mr-2" size={20} />
               <input
                 name="location"
-                value={formData.location}
+                value={formData.venue}
                 onChange={handleInputChange}
                 type="text"
-                placeholder="Add Event Location or Paste Zoom Link"
+                placeholder="Add Event Venue or Paste Zoom Link"
                 className="bg-transparent outline-none w-full"
               />
             </div>
@@ -187,7 +330,7 @@ const Page = () => {
           </div>
           <div className="flex items-center bg-white bg-opacity-10 rounded-xl p-3">
             <input
-              name="Image-URL"
+              name="image"
               value={url}
               onChange={handleInputChange}
               type="text"
@@ -196,27 +339,23 @@ const Page = () => {
             />
             <input
               name="Image-URL"
-              value={nftName}
-              onChange={handleInputChange}
-              type="text"
-              placeholder="Image URL"
-              className="text-base bg-transparent border-none outline-none"
-            />{" "}
-            <input
-              name="Image-URL"
               value={nftSymbol}
               onChange={handleInputChange}
               type="text"
               placeholder="Image URL"
               className="text-base bg-transparent border-none outline-none"
             />
+          </div>
+
+          <div className="flex items-center bg-white bg-opacity-10 rounded-xl p-3">
+            <Ticket className="mr-2" size={20} />
             <input
-              name="Image-URL"
-              value={selectedToken}
+              name="totalTicketAvailable"
+              value={formData.totalTicketAvailable}
               onChange={handleInputChange}
-              type="text"
-              placeholder="Image URL"
-              className="text-base bg-transparent border-none outline-none"
+              type="number"
+              placeholder="Total Tickets Available"
+              className="bg-transparent outline-none w-full"
             />
           </div>
 
@@ -267,8 +406,17 @@ const Page = () => {
             type="submit"
             className="w-full bg-white text-purple-900 hover:bg-gray-200 py-3 rounded-xl font-semibold mt-6"
           >
-            Create Event
+            {isLoading ? "Creating Event..." : "Create Event"}
           </button>
+          {isSuccess && (
+            <div className="text-green-500 mt-2">
+              {" "}
+              Event created successfully!
+            </div>
+          )}
+          {writeError && (
+            <div className="text-red-500 mt-2">Error:{writeError.message}</div>
+          )}
         </div>
       </form>
     </div>
