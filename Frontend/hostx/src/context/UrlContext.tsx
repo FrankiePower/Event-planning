@@ -9,7 +9,7 @@ export function useUrl() {
 }
 
 export function UrlProvider({ children }) {
-  const [url, setUrl] = React.useState("null");
+  const [url, setUrl] = React.useState(null);
 
   return (
     <UrlContext.Provider value={{ url, setUrl }}>
