@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HostX Frontend
 
-## Getting Started
+Welcome to the **HostX Frontend**! This application allows users to create, manage, and register for events in a user-friendly Web3 environment. Built with **Next.js** and **Tailwind CSS**, HostX provides a seamless experience for event hosting and participation.
 
-First, run the development server:
+## Table of Contents
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Folder Structure](#folder-structure)
+- [Technologies Used](#technologies-used)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Event Listing**: View a list of upcoming events with details like title, host, and registration link.
+- **Event Creation**: Easily create new events through a dedicated form.
+- **Responsive Design**: The application is fully responsive and works well on both desktop and mobile devices.
+- **User-friendly Interface**: Intuitive navigation and layout for enhanced user experience.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Installation
 
-## Learn More
+To run this project locally, follow these steps:
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/FrankiePower/Event-planning.git
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Navigate to the project directory**:
+   ```bash
+   cd Event-planning/Frontend/hostx
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+4. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+5. **Open your browser** and navigate to `http://localhost:3000`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Usage
+
+- Navigate to the **Home Page** to see the main features of the application, including upcoming events and a button to create a new event.
+- Click on **"Create An Event"** to access the event creation form.
+- Explore the event listings and register for events by clicking the **"Register For Event"** button.
+
+
+## Technologies Used
+
+- **Next.js**: A React framework for building server-side rendered applications.
+- **Tailwind CSS**: A utility-first CSS framework for styling the application.
+- **React**: A JavaScript library for building user interfaces.
+- **Wagmi**: A React hooks library for building and managing interactions with Ethereum.
+- **IPFS**: A peer-to-peer network for storing and sharing files in a distributed file system.
+- **Pinata**: A service for managing and pinning IPFS files, ensuring their persistence on the IPFS network.
