@@ -223,7 +223,7 @@ function OverviewContent() {
 
                     <div className="w-full p-4 border rounded-xl space-y-5">
                         <div className="flex items-start gap-4">
-                            <Smile className="h-8 w-8" />
+                            <Smile className="h-8 w-8 text-lime-700" />
                             <div className="flex flex-col items-start w-full gap-3">
                                 <div>
                                     <p className="text-stone-400 text-xs">Manage Event Visibility</p>

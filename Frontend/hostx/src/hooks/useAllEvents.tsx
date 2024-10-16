@@ -43,6 +43,27 @@ const useFetchEvents = () => {
             stateMutability: "view",
             type: "function",
         },
+        {
+            inputs: [],
+            name: "eventVenue",
+            outputs: [{ internalType: "string", name: "", type: "string" }],
+            stateMutability: "view",
+            type: "function",
+        },
+        {
+            inputs: [],
+            name: "startDate",
+            outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
+        },
+        {
+            inputs: [],
+            name: "endDate",
+            outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
+        },
         // Add other properties you want to retrieve from the EventContract
     ] as const;
     
@@ -77,6 +98,24 @@ const useFetchEvents = () => {
                     abi: eventContractABI,
                     functionName: 'eventImage',
                 }) as string;
+
+                const eventVenue = await readContract(config, {
+                    address,
+                    abi: eventContractABI,
+                    functionName: 'eventVenue',
+                }) as string;
+
+                const startDate = await readContract(config, {
+                    address,
+                    abi: eventContractABI,
+                    functionName: 'startDate',
+                }) as BigInt;
+
+                const endDate = await readContract(config, {
+                    address,
+                    abi: eventContractABI,
+                    functionName: 'endDate',
+                }) as BigInt;
     
                 const organizer = await readContract(config, {
                     address,
@@ -89,7 +128,7 @@ const useFetchEvents = () => {
     
                 setLoading(false);
     
-                return { address, name, description, image, organizerAddress };
+                return { address, name, description, image, organizerAddress, eventVenue, startDate, endDate };
     
             }));
     

@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import { FC } from 'react'
-import { AlertTriangle, Facebook, Instagram, Linkedin, Menu, MessageCircle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet'
 import { Button } from '../ui/button'
-import Link from 'next/link'
+import Social from './Social'
 
 interface InfoComponentProps {
     title: string
@@ -23,24 +23,18 @@ const InfoComponent: FC<InfoComponentProps> = ({ title, date, time, host, eventL
 
                 <div>
                     <div className="bg-[#13380e] rounded-xl p-2 space-y-3">
-                        <img src="/image.jpeg" className='h-full w-full rounded-xl object-fill' alt="" />
+                        <Image 
+                            width={0}
+                            height={0}
+                            alt='alt image'
+                            className='h-full w-full rounded-xl'
+                            src={"/image.jpeg"}
+                        />
+                        {/* <img src="/image.jpeg" className='h-full w-full rounded-xl object-fill' alt="" /> */}
                     </div>
                     <div className="flex justify-between items-center w-full h-4/12 text-sm pt-3 px-2">
                         <h3 className="font-semibold text-gray-300">Share Event</h3>
-                        <div className="flex space-x-5">
-                            <a className="">
-                                <Linkedin size={16} className='text-gray-300' />
-                            </a>
-                            <a className="">
-                                <Instagram size={16} className='text-gray-300' />
-                            </a>
-                            <a className="">
-                                <Facebook size={16} className='text-gray-300' />
-                            </a>
-                            <a className="">
-                                <MessageCircle size={16} className='text-gray-300' />
-                            </a>
-                        </div>
+                        <Social />
                     </div>
                 </div>
 
