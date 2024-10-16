@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import CustomConnectButton from "./ConnectButton";
-// import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { LayoutDashboardIcon, LayoutDashboard } from "lucide-react";
+import { DashboardIcon } from "@radix-ui/react-icons";
 
 const Navbar = () => {
   return (
@@ -14,7 +15,14 @@ const Navbar = () => {
         </Link>
         <nav>
           <div className="flex items-center gap-5 text-stone-300/70 textsm font-semibold">
-            <p className="hidden sm:block">2:09 PM GMT+1</p>
+            <p className="block uppercase">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} GMT +1</p>
+            <Link
+              href="/manage-event"
+              className="inline-flex items-center gap-1 hover:text-stone-200 text-sm sm:text-base"
+            >
+              Manage Events
+              <DashboardIcon />
+            </Link>
             <Link
               href="/events"
               className="inline-flex items-center gap-2 hover:text-stone-200 text-sm sm:text-base"
@@ -35,8 +43,6 @@ const Navbar = () => {
                 />
               </svg>
             </Link>
-            {/*   <button className="py-2 px-3 sm:px-4 bg-stone-700 rounded-3xl text-sm text-stone-300 hover:bg-stone-400 hover:text-stone-700"></button> */}
-            {/* <ConnectButton /> */}
             <CustomConnectButton />
           </div>
         </nav>
