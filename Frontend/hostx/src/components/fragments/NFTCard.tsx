@@ -1,3 +1,9 @@
+"use client";
+
+import { useState, useContext } from "react";
+import { UrlContext } from "@/context/UrlContext";
+
+import Image from "next/image";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,9 +26,47 @@ import {
 } from "@/components/ui/select";
 
 export function CardWithForm() {
+  const [file, setFile] = useState<File>();
+  const { url, setUrl } = useContext(UrlContext);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadFile = async () => {
+    try {
+      if (!file) {
+        alert("No file selected");
+        return;
+      }
+
+      setUploading(true);
+      const data = new FormData();
+      data.set("file", file);
+      const uploadRequest = await fetch("/api/files", {
+        method: "POST",
+        body: data,
+      });
+      const ipfsUrl = await uploadRequest.json();
+      console.log(ipfsUrl);
+      setUrl(ipfsUrl);
+      setUploading(false);
+    } catch (e) {
+      console.log(e);
+      setUploading(false);
+      alert("Trouble uploading file");
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target?.files?.[0]);
+  };
   return (
     <Card className="w-[350px] ">
       <CardHeader>
+        <div>
+          <input type="file" onChange={handleChange} />
+          <button disabled={uploading} onClick={uploadFile}>
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
         <CardTitle>Create your NFT Ticket</CardTitle>
         <CardDescription>Deploy your new event in one-click.</CardDescription>
       </CardHeader>

@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { ImageSelector } from "@/components/fragments/ImageSelector";
+import React, { useState, useContext } from "react";
+import { imageplaceholder } from "@/asset";
+
+import Image from "next/image";
+import { UrlContext } from "@/context/UrlContext";
 import { DatePickerWithRange } from "@/components/fragments/DatePicker";
 //import { useRouter } from "next/router";
 import {
@@ -34,6 +37,7 @@ const EventOptionItem = ({ icon: Icon, label, children }) => (
 );
 
 const Page = () => {
+  const { url } = useContext(UrlContext);
   //const router = useRouter();
   const [formData, setFormData] = useState({
     eventName: "",
@@ -70,7 +74,17 @@ const Page = () => {
   return (
     <div className="flex m-auto max-w-[960px] gap-8 p-4">
       <div className="flex flex-col gap-4">
-        <ImageSelector />
+        <div>
+          {" "}
+          <Image
+            src={url ? url : imageplaceholder}
+            alt="images"
+            width={350}
+            height={350}
+            className="rounded-xl"
+          />
+        </div>
+
         <CardWithForm />
       </div>
       <form onSubmit={handleSubmit} className="w-auto max-w-2xl">
@@ -134,6 +148,14 @@ const Page = () => {
           <input
             name="eventName"
             value={formData.eventName}
+            onChange={handleInputChange}
+            type="text"
+            placeholder="Event Name"
+            className="text-4xl bg-transparent border-none outline-none"
+          />
+          <input
+            name="eventName"
+            value={url}
             onChange={handleInputChange}
             type="text"
             placeholder="Event Name"
