@@ -24,6 +24,7 @@ This project allows event organizers to create and manage events on the Ethereum
   └── deploy.ts                 # Deployment script for deploying the factory contract
 /test
   └── Event.test.ts  # Unit tests for EventManagerFactory contract
+```
 
 ## Smart Contracts
 
