@@ -309,7 +309,7 @@ const Page = () => {
             <div className="flex items-center">
               <MapPin className="mr-2" size={20} />
               <input
-                name="location"
+                name="venue"
                 value={formData.venue}
                 onChange={handleInputChange}
                 type="text"
@@ -337,14 +337,6 @@ const Page = () => {
               placeholder="Image URL"
               className="text-base bg-transparent border-none outline-none"
             />
-            <input
-              name="Image-URL"
-              value={nftSymbol}
-              onChange={handleInputChange}
-              type="text"
-              placeholder="Image URL"
-              className="text-base bg-transparent border-none outline-none"
-            />
           </div>
 
           <div className="flex items-center bg-white bg-opacity-10 rounded-xl p-3">
@@ -360,20 +352,6 @@ const Page = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-2">Event Options</h3>
-            <EventOptionItem icon={Ticket} label="Tickets">
-              <span>{formData.tickets}</span>
-              <input
-                name="capacity"
-                value={formData.capacity}
-                onChange={handleInputChange}
-                type="number"
-                className="bg-transparent w-24 text-right"
-                placeholder="Unlimited"
-              />
-              {/* <TicketDropdown onTicketChange={undefined} /> */}
-            </EventOptionItem>
-
             <EventOptionItem icon={Users} label="Require Approval">
               <button
                 type="button"
@@ -388,17 +366,6 @@ const Page = () => {
                   }`}
                 />
               </button>
-            </EventOptionItem>
-
-            <EventOptionItem icon={Users} label="Capacity">
-              <input
-                name="capacity"
-                value={formData.capacity}
-                onChange={handleInputChange}
-                type="number"
-                className="bg-transparent w-24 text-right"
-                placeholder="Unlimited"
-              />
             </EventOptionItem>
           </div>
 
