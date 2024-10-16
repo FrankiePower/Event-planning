@@ -10,9 +10,23 @@ export function useUrl() {
 
 export function UrlProvider({ children }) {
   const [url, setUrl] = React.useState(null);
+  const [nftName, setNftName] = React.useState("");
+  const [nftSymbol, setNftSymbol] = React.useState("");
+  const [selectedToken, setSelectedToken] = React.useState("");
 
   return (
-    <UrlContext.Provider value={{ url, setUrl }}>
+    <UrlContext.Provider
+      value={{
+        url,
+        setUrl,
+        nftName,
+        setNftName,
+        nftSymbol,
+        setNftSymbol,
+        selectedToken,
+        setSelectedToken,
+      }}
+    >
       {children}
     </UrlContext.Provider>
   );
