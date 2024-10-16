@@ -4,24 +4,132 @@ import NestedDate from "@/components/registerComps/NestedDate";
 import Image from "next/image";
 import { CiLocationOn } from "react-icons/ci";
 import DialogDemo from "@/components/registerComps/DialogDemo";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import {abi} from "@/lib/contractABI";
+import {eventContractAbi} from "@/lib/eventContractAbi";
+import {config} from "@/wagmi"
+import { readContract } from '@wagmi/core'
+import { decodeFunctionData } from 'viem'
+import { Interface } from "ethers";
+
 
 const Register = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("id");
+  const [eventData, setEventData] = useState<any>({
+    eventName: "",
+    eventStartTime: "",
+    eventEndTime: "",
+    eventVenue: "",
+    eventDescription: "",
+    eventImage: ""
+  }) 
 
-  console.log("url id ", urlParam?.split("?")[0]);
-  console.log("url url ", urlParam?.split("?")[1].split("=")[1])
+  const fetchEvent = async(contract:any) => {
+    // console.log("passed contract", contract)
+    setIsLoading(true)
 
-  // useEffect(() => {
-  //   if(idParam && urlParam) {
-  //     console.log("url id ", idParam);
-  //     console.log("url url ", urlParam)
-  //   }
-  // }, [idParam, urlParam])
+    const itf = new Interface(eventContractAbi);
+
+    try {
+      const ticketTierId = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'ticketTierCount',
+      })
+
+      const eventName = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'eventName',
+      })
+
+      const eventDescription = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'eventDescription',
+      })
+
+      const eventVenue = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'eventVenue',
+      })
+
+      const eventImage = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'eventImage',
+      })
+
+      const startDate:any = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'startDate',
+      })
+
+      const endDate:any = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'endDate',
+      })
+
+      const ticketTier:any = await readContract(config, {
+        abi: eventContractAbi,
+        address: contract[0],
+        functionName: 'ticketTierIdToTicket',
+        args: [1]
+      })
+      
+      setEventData({
+        eventName: eventName,
+        eventStartTime:new Date(Number(startDate) * 1000).toLocaleString(),
+        eventEndTime: new Date(Number(endDate) * 1000).toLocaleString(),
+        eventVenue: eventVenue,
+        eventDescription: eventDescription,
+        eventImage: eventImage
+      })
+      // console.log("event name ", eventName)
+      // console.log("event desc ", eventDescription)
+      // console.log("event venue ", eventVenue)
+      // console.log("event image ", eventImage)
+      // console.log("event start date  ", new Date(Number(startDate) * 1000).toLocaleString())
+      // console.log("event end date  ", new Date(Number(endDate) * 1000).toLocaleString())
+      // console.log("ticket tiers ", ticketTier)
+      setIsLoading(false)
+    } catch (error) {
+      setIsLoading(false)
+      console.log("error fetching event ", error)
+    }  
+  }
+
+  const fetchEvents = useCallback(async() => {
+    setIsLoading(true)
+
+    try {
+      const allEvents:any = await readContract(config, {
+        abi,
+        address: '0x54025fe4a47A012526666068F6C451aAa92fe72e',
+        functionName: 'getEvents',
+      })
+  
+      fetchEvent([allEvents[0]])
+      setIsLoading(false)
+    } catch (error) {
+      setIsLoading(false)
+      console.log("error fetching all events ", error)
+    }  
+  }, [])
+
+  // console.log("url id ", urlParam?.split("?")[0]);
+  // console.log("url url ", urlParam?.split("?")[1].split("=")[1])
+
+  useEffect(() => {
+    fetchEvents()
+  }, [])
 
   return (
     <div className="h-screen sm:p-8 gap-16 px-4 sm:pt-16 sm:px-6 font-[family-name:var(--font-geist-sans)] text-white">
@@ -43,9 +151,12 @@ const Register = () => {
               </div>
 
               <div className="p-2 pl-10 w-full">
-                <p className="text-5xl font-bold mb-2">Event Title</p>
+                <p className="text-5xl font-bold mb-2">{eventData.eventName}</p>
 
-                <NestedDate />
+                <NestedDate 
+                  startTime={eventData.eventStartTime}
+                  endTime={eventData.eventEndTime}
+                />
 
                 <div className="flex flex-row items-center mb-4">
                   <CiLocationOn className="mr-8 font-bold text-base" />
@@ -69,9 +180,13 @@ const Register = () => {
             </div>
 
             <div className="p-2">
-              <p className="font-regular text-[#f7f5f2] mb-2">Hosted By</p>
+              <p className="font-regular text-[#f7f5f2] mb-2">Event Venue</p>
 
-              <p className="font-bold text-lg/">Ejezie Franklin</p>
+              <p className="font-bold text-lg mb-8">{eventData.eventVenue}</p>
+
+              <p className="font-regular text-[#f7f5f2] mb-2">Event Description</p>
+
+              <p className="font-bold text-lg/">{eventData.eventDescription}</p>
             </div>
           </div>
         </div>

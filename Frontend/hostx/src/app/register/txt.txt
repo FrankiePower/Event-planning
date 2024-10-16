@@ -1,0 +1,60 @@
+enum EventStatus {
+        Upcoming,
+        Ongoing,
+        Completed,
+        Terminated
+    }
+    enum VendorStatus {
+        active,
+        terminated
+    }
+    struct TicketTier {
+        string tierName;
+        uint256 price;
+        uint16 totalSold;
+        uint16 totalTicketAvailable;
+        string ticketURI;
+    }
+
+    struct Ticket {
+        uint256 ticketId;
+        uint16 ticketTierId;
+        uint256 amountPaid;
+        address buyer;
+        bool isRefund;
+    }
+
+    struct Vendor {
+        address vendorAddress;
+        uint16 vendorId;
+        string name;
+        string vendorImg;
+        string vendorService;
+        uint256 paymentAmount;
+        bool serviceDelivered;
+        bool isPaid;
+        VendorStatus status;
+    }
+
+    uint16 public ticketTierCount;
+    uint256 public nextTicketId = 1; // To generate unique ticket IDs
+    uint16 public vendorCount;
+    address public organizer;
+
+    string public eventName;
+    string public eventDescription;
+    string public eventVenue;
+    string public eventImage;
+    uint256 public startDate;
+    uint256 public endDate;
+    uint16 public totalTicketAvailable;
+    EventStatus status;
+
+    mapping(uint16 => TicketTier) public ticketTierIdToTicket;
+    mapping(uint16 => address) public attendee; //Ticket Tier ID to User.
+    mapping(uint256 => Ticket) public tickets; //TicketID to Ticket Struct
+
+    mapping(address => Vendor) vendors; //Vendor Address to Vendor
+    mapping(uint16 => Vendor) eventVendors; //VendorID to Vendors
+
+    IERC20 public token;
