@@ -79,7 +79,7 @@ export function CardWithForm() {
     setSelectedToken(tokenAddresses[value]);
   };
   return (
-    <div className="flex flex-row gap-6">
+    <div>
       <div>
         <Image
           src={url ? url : imageplaceholder}
