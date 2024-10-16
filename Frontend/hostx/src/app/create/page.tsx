@@ -153,17 +153,9 @@ const Page = () => {
             placeholder="Event Name"
             className="text-4xl bg-transparent border-none outline-none"
           />
-          <input
-            name="eventName"
-            value={url}
-            onChange={handleInputChange}
-            type="text"
-            placeholder="Event Name"
-            className="text-4xl bg-transparent border-none outline-none"
-          />
+
           <div className="flex justify-between bg-white bg-opacity-10 rounded-xl p-3">
             <DatePickerWithRange />
-            {/*  <TimePickerwithRange /> */}
           </div>
 
           <div className="grid grid-cols-1 gap-2 bg-white bg-opacity-10 rounded-xl p-3">
@@ -204,6 +196,16 @@ const Page = () => {
               onChange={handleInputChange}
               placeholder="Add Description"
               className="bg-transparent text-white text-lg border-none focus:ring-0"
+            />
+          </div>
+          <div className="flex items-center bg-white bg-opacity-10 rounded-xl p-3">
+            <input
+              name="Image-URL"
+              value={url}
+              onChange={handleInputChange}
+              type="text"
+              placeholder="Image URL"
+              className="text-base bg-transparent border-none outline-none"
             />
           </div>
 
