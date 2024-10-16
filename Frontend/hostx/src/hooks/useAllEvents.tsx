@@ -101,27 +101,6 @@ const useFetchEvents = () => {
         }
     }, []);
     
-    // // React hook to use the getAllEvents function
-    // function useAllEvents(factoryAddress: `0x${string}`, config: any) {
-    //     const [events, setEvents] = useState<any[]>([]);
-    //     const [loading, setLoading] = useState(true);
-    //     const [error, setError] = useState<Error | null>(null);
-    
-    //     useEffect(() => {
-    //         getAllEvents(factoryAddress, config)
-    //             .then((events) => {
-    //                 setEvents(events);
-    //                 setLoading(false);
-    //             })
-    //             .catch((err) => {
-    //                 setError(err);
-    //                 setLoading(false);
-    //             });
-    //     }, [factoryAddress, config]);
-    
-    //     return { events, loading, error };
-    // }
-    
     return { events, loading, fetchEvents };
 
 }
