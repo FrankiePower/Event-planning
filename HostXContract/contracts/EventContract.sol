@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import "hardhat/console.sol";
 contract EventContract is ERC721URIStorage {
     enum EventStatus {
         Upcoming,
@@ -56,14 +56,14 @@ contract EventContract is ERC721URIStorage {
     uint256 public startDate;
     uint256 public endDate;
     uint16 public totalTicketAvailable;
-    EventStatus status;
+    EventStatus public status;
 
     mapping(uint16 => TicketTier) public ticketTierIdToTicket;
     mapping(uint16 => address) public attendee; //Ticket Tier ID to User.
     mapping(uint256 => Ticket) public tickets; //TicketID to Ticket Struct
 
-    mapping(address => Vendor) vendors; //Vendor Address to Vendor
-    mapping(uint16 => Vendor) eventVendors; //VendorID to Vendors
+    mapping(address => Vendor) public vendors; //Vendor Address to Vendor
+    mapping(uint16 => Vendor) public eventVendors; //VendorID to Vendors
 
     IERC20 public token;
 
@@ -79,7 +79,7 @@ contract EventContract is ERC721URIStorage {
     event VendorAdded(address vendor, uint256 amountPayable);
     event ApproveVendorAgreement(bool agreed);
     event VendorTerminated(uint16 eventId);
-
+    event EventTerminated();
     constructor(
         address _organizer,
         address _tokenAddress,
@@ -130,33 +130,22 @@ contract EventContract is ERC721URIStorage {
     ) external onlyOrganizer {
         require(bytes(_ticketName).length > 0, "Ticket name is required");
         require(_ticketPrice >= 0, "Invalid Ticket Price");
-        require(
-            _totalTicketAvailable > 0,
-            "Total tickets available must be greater than 0"
-        );
+        require(_totalTicketAvailable > 0, "Total tickets available must be greater than 0");
         require(bytes(_ticketURI).length > 0, "Ticket URI is required");
-        //get allocated Ticket Size
-        uint16 newTicketSize = totalTicketAvailable + _totalTicketAvailable;
-        require(
-            newTicketSize <= totalTicketAvailable,
-            "Max event size exceeded"
-        );
 
-        totalTicketAvailable = newTicketSize;
+        uint16 availableTickets = ticketTierCount + _totalTicketAvailable;
+        require(availableTickets <= totalTicketAvailable, "Exceeds total ticket limit");
 
-        uint16 _ticketTierCount = ticketTierCount + 1;
-        TicketTier storage tier = ticketTierIdToTicket[_ticketTierCount];
+        TicketTier storage tier = ticketTierIdToTicket[ticketTierCount + 1];
         tier.tierName = _ticketName;
         tier.price = _ticketPrice;
         tier.ticketURI = _ticketURI;
         tier.totalTicketAvailable = _totalTicketAvailable;
-        ticketTierCount++;
 
-        emit TicketTierAdded(
-            _ticketTierCount,
-            _ticketPrice,
-            _totalTicketAvailable
-        );
+        ticketTierCount++;
+        totalTicketAvailable -= _totalTicketAvailable;
+
+        emit TicketTierAdded(ticketTierCount, _ticketPrice, _totalTicketAvailable);
     }
 
     function buyTicket(uint16 _tierId) external {
@@ -219,7 +208,7 @@ contract EventContract is ERC721URIStorage {
         //Check if event is terminated
         require(status == EventStatus.Terminated, "Event is still on-going.");
         //Check if user has claimed refund,
-        Ticket memory tick = tickets[_ticketId];
+        Ticket storage tick = tickets[_ticketId];
         require(tick.buyer == msg.sender, "Not owner of ticket");
         require(!tick.isRefund, "Token refunded");
         //Refund Logic
@@ -304,6 +293,18 @@ contract EventContract is ERC721URIStorage {
         emit VendorTerminated(ven.vendorId);
     }
 
-    //Sponsor
-    // function addSponsor(address sponsorAddress) external {}
+    function terminateEvent() external onlyOrganizer {
+        require(status != EventStatus.Terminated, "Event already terminated");
+        status = EventStatus.Terminated;
+        emit EventTerminated();
+    }
+
+    function updateEventStatus() external onlyOrganizer {
+        if (block.timestamp >= startDate && block.timestamp <= endDate) {
+            status = EventStatus.Ongoing;
+        } else if (block.timestamp > endDate) {
+            status = EventStatus.Completed;
+        }
+    }
+
 }
