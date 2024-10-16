@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useContext } from "react";
-import { imageplaceholder } from "@/asset";
 
-import Image from "next/image";
 import { UrlContext } from "@/context/UrlContext";
 import { DatePickerWithRange } from "@/components/fragments/DatePicker";
 //import { useRouter } from "next/router";
@@ -37,7 +35,7 @@ const EventOptionItem = ({ icon: Icon, label, children }) => (
 );
 
 const Page = () => {
-  const { url } = useContext(UrlContext);
+  const { url, nftName, nftSymbol, selectedToken } = useContext(UrlContext);
   //const router = useRouter();
   const [formData, setFormData] = useState({
     eventName: "",
@@ -73,18 +71,7 @@ const Page = () => {
 
   return (
     <div className="flex m-auto max-w-[960px] gap-8 p-4">
-      <div className="flex flex-col gap-4">
-        <div>
-          {" "}
-          <Image
-            src={url ? url : imageplaceholder}
-            alt="images"
-            width={350}
-            height={350}
-            className="rounded-xl"
-          />
-        </div>
-
+      <div className="flex">
         <CardWithForm />
       </div>
       <form onSubmit={handleSubmit} className="w-auto max-w-2xl">
@@ -202,6 +189,30 @@ const Page = () => {
             <input
               name="Image-URL"
               value={url}
+              onChange={handleInputChange}
+              type="text"
+              placeholder="Image URL"
+              className="text-base bg-transparent border-none outline-none"
+            />
+            <input
+              name="Image-URL"
+              value={nftName}
+              onChange={handleInputChange}
+              type="text"
+              placeholder="Image URL"
+              className="text-base bg-transparent border-none outline-none"
+            />{" "}
+            <input
+              name="Image-URL"
+              value={nftSymbol}
+              onChange={handleInputChange}
+              type="text"
+              placeholder="Image URL"
+              className="text-base bg-transparent border-none outline-none"
+            />
+            <input
+              name="Image-URL"
+              value={selectedToken}
               onChange={handleInputChange}
               type="text"
               placeholder="Image URL"
