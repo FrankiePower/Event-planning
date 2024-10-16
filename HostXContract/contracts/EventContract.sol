@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import "hardhat/console.sol";
 contract EventContract is ERC721URIStorage {
     enum EventStatus {
         Upcoming,
@@ -19,6 +19,7 @@ contract EventContract is ERC721URIStorage {
     struct TicketTier {
         string tierName;
         uint256 price;
+        uint16 totalSold;
         uint16 totalTicketAvailable;
         string ticketURI;
     }
@@ -55,14 +56,14 @@ contract EventContract is ERC721URIStorage {
     uint256 public startDate;
     uint256 public endDate;
     uint16 public totalTicketAvailable;
-    EventStatus status;
+    EventStatus public status;
 
     mapping(uint16 => TicketTier) public ticketTierIdToTicket;
     mapping(uint16 => address) public attendee; //Ticket Tier ID to User.
     mapping(uint256 => Ticket) public tickets; //TicketID to Ticket Struct
 
-    mapping(address => Vendor) vendors; //Vendor Address to Vendor
-    mapping(uint16 => Vendor) eventVendors; //VendorID to Vendors
+    mapping(address => Vendor) public vendors; //Vendor Address to Vendor
+    mapping(uint16 => Vendor) public eventVendors; //VendorID to Vendors
 
     IERC20 public token;
 
@@ -71,13 +72,14 @@ contract EventContract is ERC721URIStorage {
         uint256 price,
         uint16 totalTicketAvailable
     );
+
     event TicketBought(uint256 ticketId, address buyer);
     event TickeValidated(uint256 ticketId, string tierName, address buyer);
     event RefundClaimed(uint256 amount, address buyer);
     event VendorAdded(address vendor, uint256 amountPayable);
     event ApproveVendorAgreement(bool agreed);
     event VendorTerminated(uint16 eventId);
-
+    event EventTerminated();
     constructor(
         address _organizer,
         address _tokenAddress,
@@ -128,33 +130,22 @@ contract EventContract is ERC721URIStorage {
     ) external onlyOrganizer {
         require(bytes(_ticketName).length > 0, "Ticket name is required");
         require(_ticketPrice >= 0, "Invalid Ticket Price");
-        require(
-            _totalTicketAvailable > 0,
-            "Total tickets available must be greater than 0"
-        );
+        require(_totalTicketAvailable > 0, "Total tickets available must be greater than 0");
         require(bytes(_ticketURI).length > 0, "Ticket URI is required");
-        //get allocated Ticket Size
-        uint16 newTicketSize = totalTicketAvailable + _totalTicketAvailable;
-        require(
-            newTicketSize <= totalTicketAvailable,
-            "Max event size exceeded"
-        );
 
-        totalTicketAvailable = newTicketSize;
+        uint16 availableTickets = ticketTierCount + _totalTicketAvailable;
+        require(availableTickets <= totalTicketAvailable, "Exceeds total ticket limit");
 
-        uint16 _ticketTierCount = ticketTierCount + 1;
-        TicketTier storage tier = ticketTierIdToTicket[_ticketTierCount];
+        TicketTier storage tier = ticketTierIdToTicket[ticketTierCount + 1];
         tier.tierName = _ticketName;
         tier.price = _ticketPrice;
         tier.ticketURI = _ticketURI;
         tier.totalTicketAvailable = _totalTicketAvailable;
-        ticketTierCount++;
 
-        emit TicketTierAdded(
-            _ticketTierCount,
-            _ticketPrice,
-            _totalTicketAvailable
-        );
+        ticketTierCount++;
+        totalTicketAvailable -= _totalTicketAvailable;
+
+        emit TicketTierAdded(ticketTierCount, _ticketPrice, _totalTicketAvailable);
     }
 
     function buyTicket(uint16 _tierId) external {
@@ -184,6 +175,10 @@ contract EventContract is ERC721URIStorage {
         tk.amountPaid = ticketCost;
         tk.isRefund = false;
 
+        //Ticket Tier Update
+        tier.totalSold++;
+        
+
         nextTicketId++;
 
         _safeMint(msg.sender, ticketId);
@@ -193,12 +188,14 @@ contract EventContract is ERC721URIStorage {
         emit TicketBought(ticketId, msg.sender);
     }
 
+
     function validateTicket(
         uint256 _ticketId
     ) external returns (uint256, string memory) {
         require(tickets[_ticketId].ticketId != 0, "Invalid Ticket ID");
         require(ownerOf(_ticketId) == msg.sender, "Address does not have NFT.");
         Ticket memory tick = tickets[_ticketId];
+        require(tick.isRefund == false, "Ticket Refunded");
         emit TickeValidated(
             _ticketId,
             ticketTierIdToTicket[tick.ticketTierId].tierName,
@@ -211,10 +208,11 @@ contract EventContract is ERC721URIStorage {
         //Check if event is terminated
         require(status == EventStatus.Terminated, "Event is still on-going.");
         //Check if user has claimed refund,
-        Ticket memory tick = tickets[_ticketId];
+        Ticket storage tick = tickets[_ticketId];
         require(tick.buyer == msg.sender, "Not owner of ticket");
         require(!tick.isRefund, "Token refunded");
         //Refund Logic
+        tick.isRefund = true;
         uint256 amount = tick.amountPaid;
         require(token.transfer(msg.sender, amount), "Token refund failed");
         // Burn the NFT (take it back)
@@ -230,16 +228,18 @@ contract EventContract is ERC721URIStorage {
         string memory _vendorService,
         uint256 _paymentAmount
     ) external onlyOrganizer {
+        require(_vendorAddress != address(0), "Invalid Vendor Address");
         require(bytes(_name).length > 0, "Vendor name is empty");
         require(bytes(_vendorImg).length > 0, "Vendor image is empty");
         require(
             bytes(_vendorService).length > 0,
-            "Vendor service description is empty"
+            "Service description is empty"
         );
         require(
             _paymentAmount >= 0,
             "Payment amount must be greater than zero"
         );
+        require(vendors[_vendorAddress].vendorId == 0, "Vendor already added");
 
         uint16 _vendorId = vendorCount + 1;
         Vendor storage ven = vendors[_vendorAddress];
@@ -264,13 +264,18 @@ contract EventContract is ERC721URIStorage {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
         Vendor storage ven = vendors[_vendorAddress];
         require(ven.status != VendorStatus.terminated, "Venodr Terminated");
+        require(!ven.serviceDelivered, "Vendor Service Confirmed.");
+        require(ven.isPaid == false, "Vendor Already Paid.");
+        
         ven.serviceDelivered = true;
         ven.isPaid = true;
         //Pay Vendor if vendor needs to be paid;
         uint256 amountToPay = ven.paymentAmount;
+
         if (amountToPay > 0) {
             token.transfer(ven.vendorAddress, amountToPay);
         }
+        
         emit ApproveVendorAgreement(true);
     }
 
@@ -278,13 +283,28 @@ contract EventContract is ERC721URIStorage {
         address _vendorAddress
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
+        require(vendors[_vendorAddress].status != VendorStatus.terminated, "Vendor Agreement Terminated");
+        require(vendors[_vendorAddress].isPaid == false, "Vendor Already Paid.");
+        require(vendors[_vendorAddress].serviceDelivered == false, "Vendor Service Confirmed.");
+
         Vendor storage ven = vendors[_vendorAddress];
-        require(!ven.isPaid, "Vendor ALready Paid.");
-        require(!ven.serviceDelivered, "Venodr Service Confirmed.");
         ven.status = VendorStatus.terminated;
+
         emit VendorTerminated(ven.vendorId);
     }
 
-    //Sponsor
-    // function addSponsor(address sponsorAddress) external {}
+    function terminateEvent() external onlyOrganizer {
+        require(status != EventStatus.Terminated, "Event already terminated");
+        status = EventStatus.Terminated;
+        emit EventTerminated();
+    }
+
+    function updateEventStatus() external onlyOrganizer {
+        if (block.timestamp >= startDate && block.timestamp <= endDate) {
+            status = EventStatus.Ongoing;
+        } else if (block.timestamp > endDate) {
+            status = EventStatus.Completed;
+        }
+    }
+
 }

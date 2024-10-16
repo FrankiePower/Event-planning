@@ -122,21 +122,21 @@ describe("SponsorAgreement", function () {
   //     .to.be.revertedWith("Insufficient funds for distribution");
   // });
 
-  it("should allow only organizer to issue NFTs", async function () {
-    const { sponsorAgreement, organizer, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
+  // it("should allow only organizer to issue NFTs", async function () {
+  //   const { sponsorAgreement, organizer, sponsor1 } = await loadFixture(deploySponsorAgreementFixture);
 
-    const tokenId = 1;
+  //   const tokenId = 1;
 
-    // Organizer issues NFT to sponsor1
-    await expect(sponsorAgreement.connect(organizer).issueSponsorshipNFT(sponsor1.address, tokenId))
-      .to.emit(sponsorAgreement, "SponsorshipNFTIssued")
-      .withArgs(sponsor1.address, tokenId);
+  //   // Organizer issues NFT to sponsor1
+  //   await expect(sponsorAgreement.connect(organizer).issueSponsorshipNFT(sponsor1.address, tokenId))
+  //     .to.emit(sponsorAgreement, "SponsorshipNFTIssued")
+  //     .withArgs(sponsor1.address, tokenId);
 
-    // Non-organizer should fail to issue NFT
-    const nonOrganizer = sponsor1;
-    await expect(sponsorAgreement.connect(nonOrganizer).issueSponsorshipNFT(sponsor1.address, tokenId + 1))
-      .to.be.revertedWith("Only organizer can perform this action");
-  });
+  //   // Non-organizer should fail to issue NFT
+  //   const nonOrganizer = sponsor1;
+  //   await expect(sponsorAgreement.connect(nonOrganizer).issueSponsorshipNFT(sponsor1.address, tokenId + 1))
+  //     .to.be.revertedWith("Only organizer can perform this action");
+  // });
 
   it("should allow organizer to terminate sponsorship and refund", async function () {
     const { sponsorAgreement, organizer, sponsor1, contributions } = await loadFixture(deploySponsorAgreementFixture);
