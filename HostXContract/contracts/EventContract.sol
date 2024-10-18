@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
-contract EventContract is ERC721URIStorage {
 
+contract EventContract is ERC721URIStorage {
     enum EventStatus {
         Upcoming,
         Ongoing,
@@ -77,13 +77,34 @@ contract EventContract is ERC721URIStorage {
         uint16 totalTicketAvailable
     );
 
-    event TicketBought(uint256 ticketId, address buyer);
-    event TickeValidated(uint256 ticketId, string tierName, address buyer);
-    event RefundClaimed(uint256 amount, address buyer);
-    event VendorAdded(address vendor, uint256 amountPayable);
-    event ApproveVendorAgreement(bool agreed);
-    event VendorTerminated(uint16 eventId);
+    event TicketBought(
+        uint256 indexed ticketId,
+        uint16 ticketTierId,
+        address buyer
+    );
+    event TickeValidated(
+        uint256 indexed ticketId,
+        string tierName,
+        address buyer
+    );
+    event RefundClaimed(
+        uint256 indexed ticketId,
+        uint256 amount,
+        address buyer
+    );
+    event VendorAdded(
+        uint256 indexed _vendorId,
+        address vendor,
+        uint256 amountPayable
+    );
+    event ApproveVendorAgreement(
+        uint256 indexed _vendorId,
+        address vendorAddress,
+        bool agreed
+    );
+    event VendorTerminated(uint16 vendorId);
     event EventTerminated();
+
     constructor(
         address _organizer,
         address _tokenAddress,
@@ -118,7 +139,6 @@ contract EventContract is ERC721URIStorage {
         endDate = _endDate;
         totalTicketAvailable = _totalTicketAvailable;
         status = EventStatus.Upcoming;
-        
     }
 
     modifier onlyOrganizer() {
@@ -134,13 +154,19 @@ contract EventContract is ERC721URIStorage {
     ) external onlyOrganizer {
         require(bytes(_ticketName).length > 0, "Ticket name is required");
         require(_ticketPrice >= 0, "Invalid Ticket Price");
-        require(_totalTicketAvailable > 0, "Total tickets available must be greater than 0");
+        require(
+            _totalTicketAvailable > 0,
+            "Total tickets available must be greater than 0"
+        );
         require(bytes(_ticketURI).length > 0, "Ticket URI is required");
-        
+
         // Corrected calculation for availableTickets
         uint16 availableTickets = ticketTierCount + _totalTicketAvailable; // This line is unchanged
-        require(availableTickets <= totalTicketAvailable + totalTicketSold, "Exceeds total ticket limit"); // Updated condition
-        
+        require(
+            availableTickets <= totalTicketAvailable + totalTicketSold,
+            "Exceeds total ticket limit"
+        ); // Updated condition
+
         TicketTier storage tier = ticketTierIdToTicket[ticketTierCount + 1];
 
         tier.tierName = _ticketName;
@@ -151,7 +177,11 @@ contract EventContract is ERC721URIStorage {
         ticketTierCount++;
         totalTicketAvailable -= _totalTicketAvailable;
 
-        emit TicketTierAdded(ticketTierCount, _ticketPrice, _totalTicketAvailable);
+        emit TicketTierAdded(
+            ticketTierCount,
+            _ticketPrice,
+            _totalTicketAvailable
+        );
     }
 
     function buyTicket(uint16 _tierId) external {
@@ -186,7 +216,6 @@ contract EventContract is ERC721URIStorage {
 
         //Ticket Tier Update
         tier.totalSold++;
-        
 
         nextTicketId++;
 
@@ -194,9 +223,8 @@ contract EventContract is ERC721URIStorage {
         _setTokenURI(ticketId, tier.ticketURI);
         attendee[_tierId] = msg.sender;
 
-        emit TicketBought(ticketId, msg.sender);
+        emit TicketBought(ticketId, _tierId, msg.sender);
     }
-
 
     function validateTicket(
         uint256 _ticketId
@@ -226,7 +254,7 @@ contract EventContract is ERC721URIStorage {
         require(token.transfer(msg.sender, amount), "Token refund failed");
         // Burn the NFT (take it back)
         _burn(_ticketId);
-        emit RefundClaimed(amount, msg.sender);
+        emit RefundClaimed(_ticketId, amount, msg.sender);
     }
 
     //Vendor Agreement contract here.
@@ -264,7 +292,7 @@ contract EventContract is ERC721URIStorage {
 
         vendorCount++;
 
-        emit VendorAdded(_vendorAddress, _paymentAmount);
+        emit VendorAdded(_vendorId, _vendorAddress, _paymentAmount);
     }
 
     function comfirmVendorServiceDelivery(
@@ -275,7 +303,7 @@ contract EventContract is ERC721URIStorage {
         require(ven.status != VendorStatus.terminated, "Venodr Terminated");
         require(!ven.serviceDelivered, "Vendor Service Confirmed.");
         require(ven.isPaid == false, "Vendor Already Paid.");
-        
+
         ven.serviceDelivered = true;
         ven.isPaid = true;
         //Pay Vendor if vendor needs to be paid;
@@ -284,17 +312,26 @@ contract EventContract is ERC721URIStorage {
         if (amountToPay > 0) {
             token.transfer(ven.vendorAddress, amountToPay);
         }
-        
-        emit ApproveVendorAgreement(true);
+
+        emit ApproveVendorAgreement(ven.vendorId, ven.vendorAddress, true);
     }
 
     function terminateVendorAgreement(
         address _vendorAddress
     ) external onlyOrganizer {
         require(vendors[_vendorAddress].vendorId != 0, "Vendor Not Found");
-        require(vendors[_vendorAddress].status != VendorStatus.terminated, "Vendor Agreement Terminated");
-        require(vendors[_vendorAddress].isPaid == false, "Vendor Already Paid.");
-        require(vendors[_vendorAddress].serviceDelivered == false, "Vendor Service Confirmed.");
+        require(
+            vendors[_vendorAddress].status != VendorStatus.terminated,
+            "Vendor Agreement Terminated"
+        );
+        require(
+            vendors[_vendorAddress].isPaid == false,
+            "Vendor Already Paid."
+        );
+        require(
+            vendors[_vendorAddress].serviceDelivered == false,
+            "Vendor Service Confirmed."
+        );
 
         Vendor storage ven = vendors[_vendorAddress];
         ven.status = VendorStatus.terminated;
@@ -315,5 +352,4 @@ contract EventContract is ERC721URIStorage {
             status = EventStatus.Completed;
         }
     }
-
 }

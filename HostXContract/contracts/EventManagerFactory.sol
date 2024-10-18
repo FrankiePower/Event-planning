@@ -3,7 +3,6 @@ pragma solidity ^0.8.21;
 import "./EventContract.sol";
 
 contract EventManagerFactory {
-    
     uint256 public eventCounter;
     EventContract[] Events;
 
@@ -11,6 +10,7 @@ contract EventManagerFactory {
     mapping(address => EventContract[]) public organizerEvent;
 
     event EventCreated(
+        uint256 eventId,
         address organizer,
         string name,
         string description,
@@ -54,6 +54,7 @@ contract EventManagerFactory {
         organizerEvent[msg.sender].push(newEvent); //All event of an organizer
 
         emit EventCreated(
+            eventCounter,
             msg.sender,
             _name,
             _description,

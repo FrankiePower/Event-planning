@@ -23,7 +23,7 @@ async function addTicketTier() {
     // const totalAvail = 5;
     // const ticketUri = "QmbMRYxMedzGqfzhpv1PXM5iZbwj5i9n3TnRjdpftQVMm3"
 
-    const signerAddress = await signer.getAddress();
+    // const signerAddress = await signer.getAddress();
     
     // const txs = await eventContract.connect(signer).totalTicketAvailable();
     // // const receipts = txs.wait();
