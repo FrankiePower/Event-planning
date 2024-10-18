@@ -10,7 +10,7 @@ const LandingEventCard = ({
 }) => {
     return (
         <>
-            <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl bg-green-100 sm:w-[44%] md:w-[30%]">
+            <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%]">
                 <div className="rounded-3xl h-full">
                     <div className="h-full relative">
                         <img

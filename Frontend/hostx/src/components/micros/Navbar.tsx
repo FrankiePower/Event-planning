@@ -18,7 +18,7 @@ const Navbar = () => {
             <p className="block uppercase">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} GMT +1</p>
             <Link
               href="/manage-event"
-              className="inline-flex items-center gap-1 hover:text-stone-200 text-sm sm:text-base"
+              className="inline-flex items-center gap-1.5 hover:text-stone-200 text-sm sm:text-base"
             >
               Manage Events
               <DashboardIcon />

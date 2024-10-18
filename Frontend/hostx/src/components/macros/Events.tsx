@@ -67,6 +67,7 @@ export function Events() {
                             title={event.name}
                             description={event.description}
                             header={<Skeleton />}
+                            venue={event.eventVenue}
                             active={new Date(Number(event.startDate) * 1000).setHours(0, 0, 0, 0) === new Date().setHours(0, 0, 0, 0)}
                         />
                     </Link>
