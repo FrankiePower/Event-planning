@@ -1,18 +1,9 @@
 "use client";
 
 import React, { useState, useContext, useEffect } from "react";
-import {
-  CONTRACT_ADDRESS,
-  FactoryABI,
-  FactoryEventABI,
-} from "@/lib/createEvent";
+import { CONTRACT_ADDRESS, FactoryABI } from "@/lib/createEvent";
 //import { useRouter } from "next/router";
-import {
-  useWriteContract,
-  useAccount,
-  useSimulateContract,
-  useWatchContractEvent,
-} from "wagmi";
+import { useWriteContract, useAccount, useSimulateContract } from "wagmi";
 import { UrlContext } from "@/context/UrlContext";
 import { DatePickerWithRange } from "@/components/fragments/DatePicker";
 import {
@@ -34,7 +25,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { CardWithForm } from "@/components/fragments/NFTCard";
 import { addDays } from "date-fns";
 
-const EventOption = ({ icon: IconElement, label, children }) => (
+interface EventOptionProps {
+  icon: React.ElementType;
+  label: string;
+  children?: React.ReactNode;
+}
+
+const EventOption: React.FC<EventOptionProps> = ({
+  icon: IconElement,
+  label,
+  children,
+}) => (
   <div className="flex items-center justify-between rounded-xl p-3">
     <div className="flex items-center">
       <IconElement className="mr-2" size={20} />
@@ -106,8 +107,8 @@ const Page = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleToggleChange = (name) => {
-    setFormData((prev) => ({ ...prev, [name]: !prev[name] }));
+  const handleToggle = (name: keyof typeof formData) => {
+    setFormData((prevState) => ({ ...prevState, [name]: !prevState[name] }));
   };
 
   const handleSubmit = async (e) => {
@@ -222,7 +223,7 @@ const Page = () => {
               <span>Offline Location</span>
               <button
                 type="button"
-                onClick={() => handleToggleChange("isVirtual")}
+                onClick={() => handleToggle("isVirtual")}
                 className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ease-in-out ${
                   formData.isVirtual ? "bg-blue-600" : "bg-blue-400"
                 }`}
@@ -284,7 +285,7 @@ const Page = () => {
             <EventOption icon={Users} label="Require Approval">
               <button
                 type="button"
-                onClick={() => handleToggleChange("requireApproval")}
+                onClick={() => handleToggle("requireApproval")}
                 className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ease-in-out ${
                   formData.requireApproval ? "bg-blue-600" : "bg-blue-400"
                 }`}
