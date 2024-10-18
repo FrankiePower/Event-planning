@@ -22,7 +22,7 @@ contract EventManagerFactory {
     );
 
     function createEvent(
-        address paymentTokenAddress,
+        address paymentTokenAddress, //Set defualt as address zero.
         string memory _NftTokenName,
         string memory _NftSymbol,
         string memory _name,

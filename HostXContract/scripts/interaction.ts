@@ -4,27 +4,27 @@ async function interaction() {
 
     const [signer] = await ethers.getSigners();
 
-    const contractAddress = "0x5a7dCbd040Ba618f62B028a7C9ef599AA64713D7"; // Your deployed contract address
+    const contractAddress = "0x8777Aea7D2e529966cd9C35c9b4F4EBA60eE6a55"; // Your deployed contract address
     const eventContract = await ethers.getContractAt("EventManagerFactory", contractAddress);
 
     // Event creation parameters
 
     
     const events = [
-        {
-            paymentTokenAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT,
-            NftTokenName :"Traders Fair 2",
-            NftSymbol: "TF2025",
-            name :"Traders Fair 2025 - Nigeria, 8 FEB, LAGOS (Financial Event)",
-            description: "Stocks, Forex, Futures, Cryptocurrency and Options, Investing and Brokers - all in one trading educational event!",
-            venue :"Lagos Continental Hotel 52a Kofo Abayomi Street Lagos, LA 101241",
-            image: "Qmcn7W15StwAjt5njGNM5s9ybHK81nsFUyvbDQcRtXbBiP",
-            startDate :1732957200,
-            endDate: 1756116000,
-            totalTicketAvailable: 20,
-        },
         // {
-        //     paymentTokenAddress:"0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+        //     paymentTokenAddress: "0x108872F713A27bc22ca1db8CEefCAC8CbeDdF9E5", // USDT,
+        //     NftTokenName :"Traders Fair 3 -lSK",
+        //     NftSymbol: "TF2025",
+        //     name :"Traders Fair 2025 - Nigeria, 8 FEB, LAGOS (Financial Event)",
+        //     description: "Stocks, Forex, Futures, Cryptocurrency and Options, Investing and Brokers - all in one trading educational event!",
+        //     venue :"Lagos Continental Hotel 52a Kofo Abayomi Street Lagos, LA 101241",
+        //     image: "Qmcn7W15StwAjt5njGNM5s9ybHK81nsFUyvbDQcRtXbBiP",
+        //     startDate :1732957200,
+        //     endDate: 1756116000,
+        //     totalTicketAvailable: 20,
+        // },
+        // {
+        //     paymentTokenAddress:"0x108872F713A27bc22ca1db8CEefCAC8CbeDdF9E5", // LSK
         //     NftTokenName:"Africa Startup Festival Token",
         //     NftSymbol:"AFST24",
         //     name:"Africa Startup Festival 2024",
@@ -36,7 +36,7 @@ async function interaction() {
         //     totalTicketAvailable: 20
         // }, 
         // {
-        //     paymentTokenAddress:"0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+        //     paymentTokenAddress:"0x108872F713A27bc22ca1db8CEefCAC8CbeDdF9E5", // LSK
         //     NftTokenName:"Anambra Techies Token",
         //     NftSymbol:"ATT",
         //     name:"Road to Web3 in Anambra",
@@ -48,7 +48,7 @@ async function interaction() {
         //     totalTicketAvailable: 20
         // },
         // {
-        //     paymentTokenAddress:"0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+        //     paymentTokenAddress:"0x108872F713A27bc22ca1db8CEefCAC8CbeDdF9E5", // LSK
         //     NftTokenName:"Reactive Token",
         //     NftSymbol:"RAH",
         //     name:"Reactive Hackathon",
@@ -59,18 +59,18 @@ async function interaction() {
         //     endDate:1732225682,
         //     totalTicketAvailable: 20
         // },
-        // {
-        //     paymentTokenAddress:"0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
-        //     NftTokenName:"Certified Ethical Hacker Token",
-        //     NftSymbol:"CEHv12",
-        //     name:"Certified Ethical Hacker CEHv12 Training and certification OCTOBER(₦950K)",
-        //     description:"Starting on September 9th and running for 8 weeks, developers will have the chance to compete for a Hackathon prize pool of $50,000.",
-        //     venue:"1st Avenue Abuja, Federal Capital Territory 900108",
-        //     image:"QmTMUGSKmyU2L8BdhGvwesegH5fCvK57rdQMb98U2QFtPB",
-        //     startDate:1730670482,
-        //     endDate:1731016082,
-        //     totalTicketAvailable: 20
-        // },
+        {
+            paymentTokenAddress: ethers.ZeroAddress, // LSK
+            NftTokenName:"Certified Ethical Hacker Token",
+            NftSymbol:"CEHv12",
+            name:"Certified Ethical Hacker CEHv12 Training and certification OCTOBER(₦950K)",
+            description:"Starting on September 9th and running for 8 weeks, developers will have the chance to compete for a Hackathon prize pool of $50,000.",
+            venue:"1st Avenue Abuja, Federal Capital Territory 900108",
+            image:"QmTMUGSKmyU2L8BdhGvwesegH5fCvK57rdQMb98U2QFtPB",
+            startDate:1730670482,
+            endDate:1731016082,
+            totalTicketAvailable: 20
+        },
     ];
     
     events.map(async (event) => {

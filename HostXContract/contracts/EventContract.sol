@@ -17,6 +17,12 @@ contract EventContract is ERC721URIStorage {
         active,
         terminated
     }
+
+    enum PaymentMethod {
+        Token,
+        Ether
+    }
+
     struct TicketTier {
         string tierName;
         uint256 price;
@@ -31,6 +37,7 @@ contract EventContract is ERC721URIStorage {
         uint256 amountPaid;
         address buyer;
         bool isRefund;
+        PaymentMethod PaidWith;
     }
 
     struct Vendor {
@@ -57,6 +64,7 @@ contract EventContract is ERC721URIStorage {
     uint256 public startDate;
     uint256 public endDate;
     uint16 public totalTicketAvailable;
+    uint256 public totalTicketTierAdded;
     uint256 public totalTicketSold;
     uint256 public totalRevenue;
 
@@ -128,8 +136,9 @@ contract EventContract is ERC721URIStorage {
         require(_endDate > 0, "Enter a valid End Date");
         require(_startDate <= _endDate, "Invalid start and end date.");
         require(_totalTicketAvailable > 0, "Enter ticket available");
-
-        token = IERC20(_tokenAddress);
+        if (_tokenAddress != address(0)) {
+            token = IERC20(_tokenAddress);
+        }
         organizer = _organizer;
         eventName = _name;
         eventDescription = _description;
@@ -160,13 +169,14 @@ contract EventContract is ERC721URIStorage {
         );
         require(bytes(_ticketURI).length > 0, "Ticket URI is required");
 
-        // Corrected calculation for availableTickets
-        uint16 availableTickets = ticketTierCount + _totalTicketAvailable; // This line is unchanged
+        // Ensure that the total tickets after adding this tier does not exceed totalTicketAvailable
         require(
-            availableTickets <= totalTicketAvailable + totalTicketSold,
-            "Exceeds total ticket limit"
-        ); // Updated condition
+            totalTicketTierAdded + _totalTicketAvailable <=
+                totalTicketAvailable,
+            "Exceeds total available tickets"
+        );
 
+        // Store the new ticket tier details
         TicketTier storage tier = ticketTierIdToTicket[ticketTierCount + 1];
 
         tier.tierName = _ticketName;
@@ -175,7 +185,9 @@ contract EventContract is ERC721URIStorage {
         tier.totalTicketAvailable = _totalTicketAvailable;
 
         ticketTierCount++;
-        totalTicketAvailable -= _totalTicketAvailable;
+
+        // Update total tickets sold after adding the new tier
+        totalTicketTierAdded += _totalTicketAvailable;
 
         emit TicketTierAdded(
             ticketTierCount,
@@ -184,7 +196,7 @@ contract EventContract is ERC721URIStorage {
         );
     }
 
-    function buyTicket(uint16 _tierId) external {
+    function buyTicket(uint16 _tierId, uint256 _amount) external payable {
         require(msg.sender != address(0), "Invalid Address");
         require(
             bytes(ticketTierIdToTicket[_tierId].ticketURI).length > 0,
@@ -192,38 +204,44 @@ contract EventContract is ERC721URIStorage {
         );
 
         TicketTier memory tier = ticketTierIdToTicket[_tierId];
-        uint256 ticketCost = tier.price;
-        require(
-            token.balanceOf(msg.sender) >= ticketCost,
-            "Insufficient token balance"
-        );
-        require(
-            token.transferFrom(msg.sender, address(this), ticketCost),
-            "Token transfer failed"
-        );
+        uint256 ticketCost = tier.price * _amount;
+        PaymentMethod mtd = PaymentMethod.Ether;
+        if (msg.value > 0) {
+            require(msg.value >= ticketCost, "Insufficient Ether balance");
+        } else {
+            require(
+                token.balanceOf(msg.sender) >= ticketCost,
+                "Insufficient token balance"
+            );
+            require(
+                token.transferFrom(msg.sender, address(this), ticketCost),
+                "Token transfer failed"
+            );
+            mtd = PaymentMethod.Token;
+        }
 
         totalRevenue += ticketCost;
-        totalTicketSold += 1;
+        totalTicketSold += _amount;
 
-        uint256 ticketId = nextTicketId;
-        Ticket storage tk = tickets[ticketId];
+        for (uint256 i = 0; i < _amount; i++) {
+            uint256 ticketId = nextTicketId + i;
+            Ticket storage tk = tickets[ticketId];
 
-        tk.buyer = msg.sender;
-        tk.ticketId = ticketId;
-        tk.ticketTierId = _tierId;
-        tk.amountPaid = ticketCost;
-        tk.isRefund = false;
+            tk.buyer = msg.sender;
+            tk.ticketId = ticketId;
+            tk.ticketTierId = _tierId;
+            tk.amountPaid = ticketCost / _amount;
+            tk.isRefund = false;
+            tk.PaidWith = mtd;
 
-        //Ticket Tier Update
-        tier.totalSold++;
+            _safeMint(msg.sender, ticketId);
+            _setTokenURI(ticketId, tier.ticketURI);
+            attendee[_tierId] = msg.sender;
 
-        nextTicketId++;
+            emit TicketBought(ticketId, _tierId, msg.sender);
+        }
 
-        _safeMint(msg.sender, ticketId);
-        _setTokenURI(ticketId, tier.ticketURI);
-        attendee[_tierId] = msg.sender;
-
-        emit TicketBought(ticketId, _tierId, msg.sender);
+        nextTicketId += _amount;
     }
 
     function validateTicket(
@@ -242,16 +260,21 @@ contract EventContract is ERC721URIStorage {
     }
 
     function claimRefund(uint256 _ticketId) external {
-        //Check if event is terminated
+        // Check if event is terminated
         require(status == EventStatus.Terminated, "Event is still on-going.");
-        //Check if user has claimed refund,
+        // Check if user has claimed refund
         Ticket storage tick = tickets[_ticketId];
         require(tick.buyer == msg.sender, "Not owner of ticket");
         require(!tick.isRefund, "Token refunded");
-        //Refund Logic
+        // Refund Logic
         tick.isRefund = true;
         uint256 amount = tick.amountPaid;
-        require(token.transfer(msg.sender, amount), "Token refund failed");
+        PaymentMethod paidW = tick.PaidWith;
+        if (paidW == PaymentMethod.Token) {
+            require(token.transfer(msg.sender, amount), "Token refund failed");
+        } else if (paidW == PaymentMethod.Ether) {
+            payable(msg.sender).transfer(amount);
+        }
         // Burn the NFT (take it back)
         _burn(_ticketId);
         emit RefundClaimed(_ticketId, amount, msg.sender);
