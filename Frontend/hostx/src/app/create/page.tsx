@@ -98,22 +98,26 @@ const Page = () => {
   const {
     writeContract,
     error: writeError,
+    isPending,
     isSuccess,
   } = useWriteContract();
 
-  const handleInputChange = (e:) => {
+  const handleInputChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEventHandler<HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  isLoading,
+
   const handleToggle = (name: keyof typeof formData) => {
     setFormData((prevState) => ({ ...prevState, [name]: !prevState[name] }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     console.log(formData);
-    if (!formData.eventName || !formData.venue ||  isLoading,!formData.description) {
+    if (!formData.eventName || !formData.venue || !formData.description) {
       alert("Please fill in all required fields");
       return;
     }
@@ -124,7 +128,7 @@ const Page = () => {
     }
 
     try {
-      await writeContract(simulateData.request);
+      writeContract(simulateData!.request);
     } catch (error) {
       console.error("Error creating event:", error);
     }
@@ -146,7 +150,7 @@ const Page = () => {
       <div className="flex">
         <CardWithForm />
       </div>
-      <form onSubmit={handleSubmit} className="w-auto max-w-2xl">
+      <form className="w-auto max-w-2xl">
         <div className="grid grid-cols-1 gap-6">
           <div className="flex justify-between">
             <DropdownMenu>
@@ -260,7 +264,7 @@ const Page = () => {
           <div className="flex items-center bg-white bg-opacity-10 rounded-xl p-3">
             <input
               name="image"
-              value={url}
+              value={url!}
               onChange={handleInputChange}
               type="text"
               placeholder="Image URL"
@@ -299,10 +303,11 @@ const Page = () => {
           </div>
 
           <button
-            type="submit"
+            type="button"
+            onClick={handleSubmit}
             className="w-full bg-white text-purple-900 hover:bg-gray-200 py-3 rounded-xl font-semibold mt-6"
           >
-            {isLoading ? "Creating Event..." : "Create Event"}
+            {isPending ? "Creating Event..." : "Create Event"}
           </button>
           {isSuccess && (
             <div className="text-green-500 mt-2">
