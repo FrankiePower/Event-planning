@@ -26,13 +26,28 @@ import EventStatCard from "@/components/micros/EventStatCard"
 import InfoComponent from "@/components/micros/InfoComponent"
 import Image from "next/image"
 import { EventCommand } from "@/components/micros/EventCommand"
+import { useRouter } from 'next/navigation';
+import useFetchEventDetails from "@/hooks/useSingleEvent";
+import { useSearchParams } from 'next/navigation';
 
 // Define a type for the keys of tabContent
 type TabKeys = 'overview' | 'guests' | 'insight' | 'more';
 
-export default function Dashboard() {
+// Define a type for event details
+type EventDetails = {
+    eventName: string;
+    eventDescription: string;
+    eventVenue: string;
+    startDate: BigInt;
+    totalTicketSold: BigInt;
+} | null;
 
-    const [activeTab, setActiveTab] = useState<TabKeys>("overview")
+export default function Dashboard() {
+    const [activeTab, setActiveTab] = useState<TabKeys>("overview");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const contractAddress = searchParams.get('contractAddress');
+    const { loading, eventDetails, error } = useFetchEventDetails(contractAddress);
 
     const handleTabClick = (tab: TabKeys) => (event: React.MouseEvent) => {
         event.preventDefault()
@@ -40,7 +55,7 @@ export default function Dashboard() {
     }
 
     const tabContent = {
-        overview: <OverviewContent />,
+        overview: <OverviewContent loading={loading} eventDetails={eventDetails} error={error} />,
         guests: <GuestsContent />,
         insight: <InsightContent />,
         more: <MoreContent />,
@@ -91,7 +106,6 @@ export default function Dashboard() {
                         >
                             more
                         </Link>
-
                     </nav>
                     <Sheet>
                         <SheetTrigger asChild>
@@ -119,7 +133,6 @@ export default function Dashboard() {
                                         }`}
                                     onClick={(event) => {
                                         handleTabClick("overview")(event)
-
                                     }}
                                 >
                                     Overview
@@ -130,7 +143,6 @@ export default function Dashboard() {
                                         }`}
                                     onClick={(event) => {
                                         handleTabClick("guests")(event)
-
                                     }}
                                 >
                                     Guests
@@ -141,7 +153,6 @@ export default function Dashboard() {
                                         }`}
                                     onClick={(event) => {
                                         handleTabClick("insight")(event)
-
                                     }}
                                 >
                                     Insight
@@ -152,12 +163,10 @@ export default function Dashboard() {
                                         }`}
                                     onClick={(event) => {
                                         handleTabClick("more")(event)
-
                                     }}
                                 >
                                     More
                                 </Link>
-
                             </nav>
                         </SheetContent>
                     </Sheet>
@@ -173,25 +182,37 @@ export default function Dashboard() {
     )
 }
 
-function OverviewContent() {
+function OverviewContent({ loading, eventDetails, error }: { loading: boolean; eventDetails: EventDetails; error: Error | null }) {
+    if (loading) {
+        return <div>Loading...</div>
+    }
+
+    if (error) {
+        return <div>Error: {error.message}</div>
+    }
+
+    if (!eventDetails) {
+        return <div>No event details available</div>
+    }
+
     return (
         <>
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-
-                <EventStatCard title="Total Revenue" value="$45,231.89" icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} />
-
-                <EventStatCard title="Registrations" value="+2350" icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} />
-
+                <EventStatCard title="Total Revenue" value={eventDetails.eventName || 'N/A'} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} />
+                <EventStatCard title="Registrations" value={eventDetails.totalTicketSold?.toString() || 'N/A'} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} />
                 <EventStatCard title="Speakers" value="12" icon={<CreditCard className="h-4 w-4 text-muted-foreground" />} />
-
                 <EventStatCard title="Sponsors" value="53" icon={<Activity className="h-4 w-4 text-muted-foreground" />} />
-
             </div>
 
             <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-
                 <div className="xl:col-span-2 bg-transparent">
-                    <InfoComponent title="Total Revenue" date="2023-06-23" time="10:00 AM" host={{ name: "Olivia Martin", email: "olivia.martin@email.com" }} eventLink="hjfhg" />
+                    <InfoComponent 
+                        title={eventDetails.eventName || 'N/A'} 
+                        date={eventDetails.startDate ? new Date(Number(eventDetails.startDate)).toLocaleDateString() : 'N/A'} 
+                        time={eventDetails.startDate ? new Date(Number(eventDetails.startDate)).toLocaleTimeString() : 'N/A'} 
+                        host={{ name: "Olivia Martin", email: "olivia.martin@email.com" }} 
+                        eventLink="hjfhg" 
+                    />
                 </div>
 
                 <div className="grid gap-3">    
@@ -202,7 +223,6 @@ function OverviewContent() {
                                 <Plus className="mr-2 h-4 w-4" /> Add Host
                             </Button>
                         </div>
-
                         <div className="font-light text-md">
                             Add hosts, special guests, and event managers.
                         </div>
@@ -215,7 +235,6 @@ function OverviewContent() {
                                 <Plus className="mr-2 h-4 w-4" /> Add Guest
                             </Button>
                         </div>
-
                         <div className="font-light text-md">
                             Add hosts, special guests, and event managers.
                         </div>
@@ -223,7 +242,7 @@ function OverviewContent() {
 
                     <div className="w-full p-4 border rounded-xl space-y-5">
                         <div className="flex items-start gap-4">
-                            <Smile className="h-8 w-8" />
+                            <Smile className="h-8 w-8 text-lime-700" />
                             <div className="flex flex-col items-start w-full gap-3">
                                 <div>
                                     <p className="text-stone-400 text-xs">Manage Event Visibility</p>
@@ -242,9 +261,7 @@ function OverviewContent() {
                         </div>
                     </div>
                 </div>
-
             </div>
-
         </>
     )
 }
