@@ -4,7 +4,7 @@ async function interaction() {
 
     const [signer] = await ethers.getSigners();
 
-    const contractAddress = "0x54025fe4a47A012526666068F6C451aAa92fe72e"; // Your deployed contract address
+    const contractAddress = "0xE604Dbf839c5f69116CFB5303E5f0f604F8562ad"; // Your deployed contract address
     const eventContract = await ethers.getContractAt("EventManagerFactory", contractAddress);
 
     // Event creation parameters
