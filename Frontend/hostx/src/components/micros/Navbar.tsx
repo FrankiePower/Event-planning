@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import CustomConnectButton from "./ConnectButton";
-import { LayoutDashboardIcon, LayoutDashboard } from "lucide-react";
 import { DashboardIcon } from "@radix-ui/react-icons";
 
 const Navbar = () => {
@@ -15,7 +14,14 @@ const Navbar = () => {
         </Link>
         <nav>
           <div className="flex items-center gap-5 text-stone-300/70 textsm font-semibold">
-            <p className="block uppercase">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} GMT +1</p>
+            <p className="block uppercase">
+              {new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })}{" "}
+              GMT +1
+            </p>
             <Link
               href="/manage-event"
               className="inline-flex items-center gap-1.5 hover:text-stone-200 text-sm sm:text-base"
