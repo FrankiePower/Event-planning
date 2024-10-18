@@ -8,6 +8,7 @@ import BackgroundWrapper from "@/components/micros/BackgroundWrapper";
 import Providers from "@/context/Providers";
 import "@rainbow-me/rainbowkit/styles.css";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { UrlProvider } from "@/context/UrlContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -40,7 +41,8 @@ export default function RootLayout({
           <BackgroundWrapper>
             <RainbowKitProvider modalSize="compact">
               <Navbar />
-              {children}
+              <UrlProvider>{children}</UrlProvider>
+
               <Footer />
             </RainbowKitProvider>
           </BackgroundWrapper>{" "}
