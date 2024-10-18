@@ -235,7 +235,10 @@ contract EventContract is ERC721URIStorage {
             tk.PaidWith = mtd;
 
             _safeMint(msg.sender, ticketId);
-            _setTokenURI(ticketId, tier.ticketURI);
+            _setTokenURI(
+                ticketId,
+                string(abi.encodePacked("ipfs://", tier.ticketURI))
+            );
             attendee[_tierId] = msg.sender;
 
             emit TicketBought(ticketId, _tierId, msg.sender);
@@ -259,7 +262,7 @@ contract EventContract is ERC721URIStorage {
         return (_ticketId, ticketTierIdToTicket[tick.ticketTierId].tierName);
     }
 
-    function claimRefund(uint256 _ticketId) external {
+    function claimRefund(uint256 _ticketId) external payable {
         // Check if event is terminated
         require(status == EventStatus.Terminated, "Event is still on-going.");
         // Check if user has claimed refund
