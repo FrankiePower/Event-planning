@@ -10,14 +10,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const TicketDropdown = ({ onTicketChange }) => {
+interface TicketDropdownProps {
+  onTicketChange: (tickets: { [key: string]: number }) => void;
+}
+
+const TicketDropdown = ({ onTicketChange }: TicketDropdownProps) => {
   const [tickets, setTickets] = useState({
     vvip: 0,
     vip: 0,
     regular: 0,
   });
 
-  const handleInputChange = (e, type) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: string
+  ) => {
     const value = parseInt(e.target.value) || 0;
     setTickets((prev) => ({ ...prev, [type]: value }));
     onTicketChange({ ...tickets, [type]: value });

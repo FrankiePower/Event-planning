@@ -9,7 +9,10 @@ export function TimePickerwithRange({}: React.HTMLAttributes<HTMLDivElement>) {
 
   return (
     <div>
-      <TimePicker onChange={setPicktime} value={picktime} />
+      <TimePicker
+        onChange={(value) => setPicktime(value!.toString())}
+        value={picktime}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import useFetchEvents from "@/hooks/useAllEvents";
+import useFetchEvents, { IEventDetails } from "@/hooks/useAllEvents";
 import { EventItem } from "@/components/micros/EventCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -15,7 +15,7 @@ export default function AllUserEvents() {
   const { address } = useAccount(); // Get connected wallet address
   // const staticAddress = "0x40feacdeee6f017fA2Bc1a8FB38b393Cf9022d71";
   const { events, loading, fetchEvents } = useFetchEvents();
-  const [filteredEvents, setFilteredEvents] = useState<unknown[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<IEventDetails[]>([]);
 
   // Filter events where organizer matches the connected wallet address
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function AllUserEvents() {
       if (events && address) {
         console.log(events);
         const userEvents = events.filter(
-          (event: unknown) => event.organizerAddress === address
+          (event: IEventDetails) => event.organizerAddress === address
         );
         setFilteredEvents(userEvents);
       }

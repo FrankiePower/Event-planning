@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useEffect, useState } from "react";
 import { Timeline } from "@/components/ui/timeline";
@@ -22,10 +23,10 @@ export function Events() {
     );
 
     // Group sorted events by their formatted startDate
-    return sortedEvents.reduce((acc, event) => {
+    return sortedEvents.reduce((acc: any, event) => {
       const startDate = new Date(Number(event.startDate) * 1000); // Convert startDate to milliseconds
       const formattedDate = format(startDate, "MMMM dd, yyyy"); // Format to readable date
-      //ts-ignore
+
       if (!acc[formattedDate]) {
         acc[formattedDate] = [];
       }
@@ -35,7 +36,7 @@ export function Events() {
   };
 
   // Filter for events that are happening today or in the future
-  const filterUpcomingEvents = (events: IEventDetails[]) => {
+  const filterUpcomingEvents = (events: any[]) => {
     const currentTime = Date.now(); // Current timestamp in milliseconds
     return events.filter(
       (event) => Number(event.endDate) * 1000 >= currentTime // Convert endDate to milliseconds
