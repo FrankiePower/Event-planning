@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 contract EventContract is ERC721URIStorage {
+
     enum EventStatus {
         Upcoming,
         Ongoing,
@@ -56,6 +57,9 @@ contract EventContract is ERC721URIStorage {
     uint256 public startDate;
     uint256 public endDate;
     uint16 public totalTicketAvailable;
+    uint256 public totalTicketSold;
+    uint256 public totalRevenue;
+
     EventStatus public status;
 
     mapping(uint16 => TicketTier) public ticketTierIdToTicket;
@@ -165,6 +169,9 @@ contract EventContract is ERC721URIStorage {
             token.transferFrom(msg.sender, address(this), ticketCost),
             "Token transfer failed"
         );
+
+        totalRevenue += ticketCost;
+        totalTicketSold += 1;
 
         uint256 ticketId = nextTicketId;
         Ticket storage tk = tickets[ticketId];

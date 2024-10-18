@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract SmartDevToken is ERC20("SmartDev Token", "SMD") {
+contract HostXToken is ERC20("HostX", "HXT") {
     address public owner;
 
     constructor() {
