@@ -136,11 +136,13 @@ contract EventContract is ERC721URIStorage {
         require(_ticketPrice >= 0, "Invalid Ticket Price");
         require(_totalTicketAvailable > 0, "Total tickets available must be greater than 0");
         require(bytes(_ticketURI).length > 0, "Ticket URI is required");
-
-        uint16 availableTickets = ticketTierCount + _totalTicketAvailable;
-        require(availableTickets <= totalTicketAvailable, "Exceeds total ticket limit");
-
+        
+        // Corrected calculation for availableTickets
+        uint16 availableTickets = ticketTierCount + _totalTicketAvailable; // This line is unchanged
+        require(availableTickets <= totalTicketAvailable + totalTicketSold, "Exceeds total ticket limit"); // Updated condition
+        
         TicketTier storage tier = ticketTierIdToTicket[ticketTierCount + 1];
+
         tier.tierName = _ticketName;
         tier.price = _ticketPrice;
         tier.ticketURI = _ticketURI;
