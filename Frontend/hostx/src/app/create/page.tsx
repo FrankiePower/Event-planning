@@ -53,8 +53,8 @@ const Page = () => {
   const { address } = useAccount();
 
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2024, 8, 14).getTime(),
-    to: addDays(new Date(2024, 8, 25), 2).getTime(),
+    from: new Date(2024, 8, 14),
+    to: addDays(new Date(2024, 8, 25), 2),
   });
 
   console.log(date?.from, date?.to);
@@ -67,8 +67,8 @@ const Page = () => {
     description: "",
     venue: "",
     image: url,
-    startDate: date.from,
-    endDate: date.to,
+    startDate: date!.from?.getTime(),
+    endDate: date!.to?.getTime(),
     totalTicketAvailable: "",
     requireApproval: false,
     calendar: "Personal Calendar",
@@ -88,8 +88,8 @@ const Page = () => {
       formData.description,
       formData.venue,
       url,
-      date.from,
-      date.to,
+      date!.from?.getTime(),
+      date!.to?.getTime(),
       parseInt(formData.totalTicketAvailable) || 0,
     ],
     account: address,
@@ -98,15 +98,14 @@ const Page = () => {
   const {
     writeContract,
     error: writeError,
-    isLoading,
     isSuccess,
   } = useWriteContract();
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e:) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
+  isLoading,
   const handleToggle = (name: keyof typeof formData) => {
     setFormData((prevState) => ({ ...prevState, [name]: !prevState[name] }));
   };
@@ -114,7 +113,7 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(formData);
-    if (!formData.eventName || !formData.venue || !formData.description) {
+    if (!formData.eventName || !formData.venue ||  isLoading,!formData.description) {
       alert("Please fill in all required fields");
       return;
     }

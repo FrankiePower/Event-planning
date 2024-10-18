@@ -32,7 +32,6 @@ export function CardWithForm() {
     setNftName,
     nftSymbol,
     setNftSymbol,
-    selectedToken,
     setSelectedToken,
   } = useContext(UrlContext);
 
@@ -67,15 +66,15 @@ export function CardWithForm() {
     setFile(e.target?.files?.[0]);
   };
 
-  const handleNftNameChange = (e) => {
+  const handleNftNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNftName(e.target.value);
   };
 
-  const handleNftSymbolChange = (e) => {
+  const handleNftSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNftSymbol(e.target.value);
   };
 
-  const handleTokenChange = (value) => {
+  const handleTokenChange = (value: "lisk" | "usdt" | "usdc" | "dai") => {
     setSelectedToken(tokenAddresses[value]);
   };
   return (

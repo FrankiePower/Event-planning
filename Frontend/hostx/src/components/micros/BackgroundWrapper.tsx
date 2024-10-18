@@ -2,7 +2,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function BackgroundWrapper({
   children,
@@ -14,10 +13,10 @@ export default function BackgroundWrapper({
   let landingGradient = "";
 
   switch (pathname) {
-    case '/events':
+    case "/events":
       landingGradient = "from-gray-700 via-gray-800 to-gray-950";
       break;
-    case '/manage-event':
+    case "/manage-event":
       landingGradient = "from-[#121212] via-stone-900 to-black";
       break;
     case "/create":
@@ -25,7 +24,7 @@ export default function BackgroundWrapper({
       break;
     default:
       landingGradient = "from-stone-600/90 via-stone-800 to-stone-950";
-  } 
+  }
 
   return (
     <div className={`bg-gradient-to-b ${landingGradient} min-h-screen`}>

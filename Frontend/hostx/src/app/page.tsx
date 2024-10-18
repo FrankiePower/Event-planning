@@ -11,18 +11,17 @@ export default function Home() {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  });
 
   useEffect(() => {
     fetchEvents();
     if (events.length > 0) {
       console.log("Updated events state: ", events);
     }
-  }, [events]);
+  }, [events, fetchEvents]);
 
   return (
     <div className="hscreen sm:p-8 gap-16 px-4 sm:pt-16 sm:px-6 font-[family-name:var(--font-geist-sans)] text-white">
-
       <button onClick={fetchEvents}>click me</button>
 
       <h1 className="text-5xl sm:text-9xl text-stone-200 font-bold text-left fontmono tracking-tighter mt-6 sm:mt-0">
@@ -32,7 +31,10 @@ export default function Home() {
       <div className="p-6 bg-stone-700/30 rounded-3xl h-full mt-6 sm:hidden">
         <div className="flex flex-col justify-between items-start h-full">
           <p className="text-xl font-light">
-            Join the hostX community to discover the most epic events, meet like-minded thrill-seekers, and create unforgettable experiences. Sig     </p>
+            Join the hostX community to discover the most epic events, meet
+            like-minded thrill-seekers, and create unforgettable experiences.
+            Sig{" "}
+          </p>
 
           <div className="flex items-center justify-between mt-5 w-full">
             <div className="inline-flex items-center gap-3">
@@ -56,12 +58,13 @@ export default function Home() {
       </div>
 
       <div className="scrollbar-hide my-10 sm:mt-14 sm:mb-0 flex w-full snap-x snap-mandatory scroll-px-10 gap-5 overflow-x-scroll scroll-smooth px0">
-
         <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
           <div className="p-6 bg-stone-700/30 rounded-3xl h-full">
             <div className="flex flex-col justify-between items-start h-full">
               <p className="text-xl font-light">
-                Join the hostX community to discover the most epic events, meet like-minded thrill-seekers, and create unforgettable experiences!
+                Join the hostX community to discover the most epic events, meet
+                like-minded thrill-seekers, and create unforgettable
+                experiences!
               </p>
 
               <div className="flex items-center justify-between mt-5 w-full">
@@ -86,42 +89,47 @@ export default function Home() {
         </div>
 
         {loading ? (
-          Array(3).fill(null).map((_, i) => (
-            <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
-              <Skeleton key={i} className="h-full w-full rounded-3xl" />
-            </div>
+          Array(3)
+            .fill(null)
+            .map((_, i) => (
+              // eslint-disable-next-line react/jsx-key
+              <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
+                <Skeleton key={i} className="h-full w-full rounded-3xl" />
+              </div>
+            ))
+        ) : events.length > 0 ? (
+          events.slice(0, 6).map((event) => (
+            <LandingEventCard
+              key={event.address}
+              title={event.name}
+              organizer={event.organizerAddress || "Unknown Organizer"} // Handle undefined organizer
+            />
           ))
         ) : (
-          events.length > 0 ? (
-            events.slice(0, 6).map((event) => (
-              <LandingEventCard
-                key={event.address}
-                title={event.name}
-                organizer={event.organizerAddress || "Unknown Organizer"} // Handle undefined organizer
-              />
-            ))
-          ) : (
-            <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
-              <div className="p-6 bg-stone-700/30 rounded-3xl h-full">
-                <div className="flex flex-col justify-center items-center h-full w-full">
-                  <p className="text-2xl">No events available.</p>
-                </div>
+          <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
+            <div className="p-6 bg-stone-700/30 rounded-3xl h-full">
+              <div className="flex flex-col justify-center items-center h-full w-full">
+                <p className="text-2xl">No events available.</p>
               </div>
             </div>
-          )
+          </div>
         )}
 
         <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] group">
-          <Link href={'/events'}>
+          <Link href={"/events"}>
             <div className="p-6 bg-stone-700/30 group-hover:bg-stone-600 rounded-3xl h-full">
               <div className="flex flex-col justify-center items-center w-full h-full gap-4">
-                <CircleChevronRight size={50} className="text-stone-600 group-hover:text-stone-400" />
-                <p className="text-2xl font-semibold text-stone-600 group-hover:text-stone-400">Explore More events</p>
+                <CircleChevronRight
+                  size={50}
+                  className="text-stone-600 group-hover:text-stone-400"
+                />
+                <p className="text-2xl font-semibold text-stone-600 group-hover:text-stone-400">
+                  Explore More events
+                </p>
               </div>
             </div>
           </Link>
         </div>
-
 
         {/* {events.map((event) => (
           <LandingEventCard 
@@ -245,10 +253,7 @@ export default function Home() {
             </div>
           </div>
         </div> */}
-
       </div>
-
-
     </div>
   );
 }

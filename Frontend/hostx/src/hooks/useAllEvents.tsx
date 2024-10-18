@@ -2,102 +2,114 @@ import { readContract } from "@wagmi/core";
 import { useState, useCallback } from "react";
 import { config } from "../wagmi";
 
+export interface IEventDetails {
+  address: `0x${string}`;
+  name: string;
+  description: string;
+  image: string;
+  organizerAddress: string;
+  eventVenue: string;
+  startDate: bigint;
+  endDate: bigint;
+  totalTicketAvailable: number;
+  totalTicketSold: bigint;
+  totalRevenue: bigint;
+}
 const useFetchEvents = () => {
-  const eventManagerFactoryABI = [
-    {
-      inputs: [],
-      name: "getEvents",
-      outputs: [
-        {
-          internalType: "contract EventContract[]",
-          name: "",
-          type: "address[]",
-        },
-      ],
-      stateMutability: "view",
-      type: "function",
-    },
-  ] as const;
-
-  const eventContractABI = [
-    {
-      inputs: [],
-      name: "eventName",
-      outputs: [{ internalType: "string", name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "eventDescription",
-      outputs: [{ internalType: "string", name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "eventImage",
-      outputs: [{ internalType: "string", name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "organizer",
-      outputs: [{ internalType: "address", name: "", type: "address" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "eventVenue",
-      outputs: [{ internalType: "string", name: "", type: "string" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "startDate",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "endDate",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "totalTicketAvailable",
-      outputs: [{ internalType: "uint16", name: "", type: "uint16" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "totalTicketSold",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    {
-      inputs: [],
-      name: "totalRevenue",
-      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-      stateMutability: "view",
-      type: "function",
-    },
-    // Add other properties you want to retrieve from the EventContract
-  ] as const;
-
-  const [events, setEvents] = useState<unknown[]>([]);
+  const [events, setEvents] = useState<IEventDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Function to get all events and their details
   const fetchEvents = useCallback(async () => {
+    const eventManagerFactoryABI = [
+      {
+        inputs: [],
+        name: "getEvents",
+        outputs: [
+          {
+            internalType: "contract EventContract[]",
+            name: "",
+            type: "address[]",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+    ] as const;
+
+    const eventContractABI = [
+      {
+        inputs: [],
+        name: "eventName",
+        outputs: [{ internalType: "string", name: "", type: "string" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "eventDescription",
+        outputs: [{ internalType: "string", name: "", type: "string" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "eventImage",
+        outputs: [{ internalType: "string", name: "", type: "string" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "organizer",
+        outputs: [{ internalType: "address", name: "", type: "address" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "eventVenue",
+        outputs: [{ internalType: "string", name: "", type: "string" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "startDate",
+        outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "endDate",
+        outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "totalTicketAvailable",
+        outputs: [{ internalType: "uint16", name: "", type: "uint16" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "totalTicketSold",
+        outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "totalRevenue",
+        outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+        stateMutability: "view",
+        type: "function",
+      },
+      // Add other properties you want to retrieve from the EventContract
+    ] as const;
     try {
       const eventAddresses = (await readContract(config, {
         address: "0x92c721f2Db5fA4Cb0a77338bB6076aadF00237a8",
@@ -194,7 +206,7 @@ const useFetchEvents = () => {
     } catch (error) {
       console.log("Error fetching events: ", error);
     }
-  }, []);
+  }, [events]);
 
   return { events, loading, fetchEvents };
 };

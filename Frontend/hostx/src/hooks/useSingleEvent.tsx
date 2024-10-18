@@ -17,7 +17,7 @@ const useFetchEventDetails = (contractAddress: string | null) => {
 
   useEffect(() => {
     if (contractAddress) {
-      const fetchEventDetails = async (address: string) => {
+      const fetchEventDetails = async () => {
         try {
           // Your existing fetch logic here
           // Update setEventDetails with the fetched data
@@ -37,7 +37,7 @@ const useFetchEventDetails = (contractAddress: string | null) => {
           setLoading(false);
         }
       };
-      fetchEventDetails(contractAddress);
+      fetchEventDetails();
     } else {
       setLoading(false);
       setError(new Error("No contract address provided"));

@@ -12,7 +12,7 @@ const Footer: FC = () => {
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <Link href="/whats-new">What's New</Link>
+                <Link href="/whats-new">What&apos;s New</Link>
               </li>
               <li>
                 <Link href="/discover">Discover</Link>

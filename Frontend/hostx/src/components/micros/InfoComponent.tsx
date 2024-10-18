@@ -1,8 +1,8 @@
+import { AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import { FC } from "react";
-import { AlertTriangle } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import Social from "./Social";
 
 interface InfoComponentProps {
@@ -16,13 +16,7 @@ interface InfoComponentProps {
   eventLink: string;
 }
 
-const InfoComponent: FC<InfoComponentProps> = ({
-  title,
-  date,
-  time,
-  host,
-  eventLink,
-}) => {
+const InfoComponent: FC<InfoComponentProps> = ({ time }) => {
   return (
     <div className="bg-transparent text-white p-4 shadow-xl max-w-4xl mx-auto border rounded-xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
