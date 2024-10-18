@@ -96,7 +96,7 @@ const useFetchEvents = () => {
         try {
     
             const eventAddresses = await readContract(config, {
-                address: '0x5a7dCbd040Ba618f62B028a7C9ef599AA64713D7',
+                address: '0x92c721f2Db5fA4Cb0a77338bB6076aadF00237a8',
                 abi: eventManagerFactoryABI,
                 functionName: 'getEvents',
             }) as `0x${string}`[];
