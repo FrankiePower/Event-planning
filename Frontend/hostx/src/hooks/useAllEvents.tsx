@@ -64,6 +64,27 @@ const useFetchEvents = () => {
             stateMutability: "view",
             type: "function",
         },
+        {
+            inputs: [],
+            name: "totalTicketAvailable",
+            outputs: [{ internalType: "uint16", name: "", type: "uint16" }],
+            stateMutability: "view",
+            type: "function",
+        },
+        {
+            inputs: [],
+            name: "totalTicketSold",
+            outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
+        },
+        {
+            inputs: [],
+            name: "totalRevenue",
+            outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+            stateMutability: "view",
+            type: "function",
+        },
         // Add other properties you want to retrieve from the EventContract
     ] as const;
     
@@ -75,7 +96,7 @@ const useFetchEvents = () => {
         try {
     
             const eventAddresses = await readContract(config, {
-                address: '0x54025fe4a47A012526666068F6C451aAa92fe72e',
+                address: '0x5a7dCbd040Ba618f62B028a7C9ef599AA64713D7',
                 abi: eventManagerFactoryABI,
                 functionName: 'getEvents',
             }) as `0x${string}`[];
@@ -116,6 +137,24 @@ const useFetchEvents = () => {
                     abi: eventContractABI,
                     functionName: 'endDate',
                 }) as BigInt;
+
+                const totalTicketAvailable = await readContract(config, {
+                    address,
+                    abi: eventContractABI,
+                    functionName: 'totalTicketAvailable',
+                }) as Number;
+
+                const totalTicketSold = await readContract(config, {
+                    address,
+                    abi: eventContractABI,
+                    functionName: 'totalTicketSold',
+                }) as BigInt;
+
+                const totalRevenue = await readContract(config, {
+                    address,
+                    abi: eventContractABI,
+                    functionName: 'totalRevenue',
+                }) as BigInt;
     
                 const organizer = await readContract(config, {
                     address,
@@ -128,7 +167,7 @@ const useFetchEvents = () => {
     
                 setLoading(false);
     
-                return { address, name, description, image, organizerAddress, eventVenue, startDate, endDate };
+                return { address, name, description, image, organizerAddress, eventVenue, startDate, endDate, totalTicketAvailable, totalTicketSold, totalRevenue };
     
             }));
     

@@ -86,7 +86,7 @@ export default function Home() {
         </div>
 
         {loading ? (
-          Array(3).fill().map((_, i) => (
+          Array(3).fill(null).map((_, i) => (
             <div className="md:2/3 relative aspect-[3/3] w-[90%] shrink-0 snap-start snap-always rounded-3xl sm:w-[44%] md:w-[30%] hidden sm:block">
               <Skeleton key={i} className="h-full w-full rounded-3xl" />
             </div>
