@@ -8,7 +8,7 @@ export function useUrl() {
   return React.useContext(UrlContext);
 }
 
-export function UrlProvider({ children }) {
+export function UrlProvider({ children }: { children: React.ReactNode }) {
   const [url, setUrl] = React.useState(null);
   const [nftName, setNftName] = React.useState("");
   const [nftSymbol, setNftSymbol] = React.useState("");

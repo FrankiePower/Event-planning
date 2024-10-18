@@ -2,7 +2,6 @@
 
 import React, { useState, useContext, useEffect } from "react";
 import { CONTRACT_ADDRESS, FactoryABI } from "@/lib/createEvent";
-//import { useRouter } from "next/router";
 import { useWriteContract, useAccount, useSimulateContract } from "wagmi";
 import { UrlContext } from "@/context/UrlContext";
 import { DatePickerWithRange } from "@/components/fragments/DatePicker";
@@ -24,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CardWithForm } from "@/components/fragments/NFTCard";
 import { addDays } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 interface EventOptionProps {
   icon: React.ElementType;
