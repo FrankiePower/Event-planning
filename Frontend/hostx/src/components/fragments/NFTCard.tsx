@@ -79,7 +79,7 @@ export function CardWithForm() {
     setSelectedToken(tokenAddresses[value]);
   };
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <div>
         <Image
           src={url ? url : imageplaceholder}
@@ -90,7 +90,7 @@ export function CardWithForm() {
         />
       </div>
       <div>
-        <Card className="w-[350px] ">
+        <Card className="w-[350px] bg-gray-400 ">
           <CardHeader>
             <div className="flex flex-col gap-4">
               <div>

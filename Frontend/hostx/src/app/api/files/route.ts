@@ -1,12 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { pinata } from "../../../../utils/config";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData();

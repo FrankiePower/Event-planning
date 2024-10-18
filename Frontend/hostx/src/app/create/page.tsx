@@ -1,8 +1,18 @@
 "use client";
 
-import React, { useState, useContext } from "react";
-import { useWriteContract, useAccount, useSimulateContract } from "wagmi";
-import { parseUnits } from "viem";
+import React, { useState, useContext, useEffect } from "react";
+import {
+  CONTRACT_ADDRESS,
+  FactoryABI,
+  FactoryEventABI,
+} from "@/lib/createEvent";
+//import { useRouter } from "next/router";
+import {
+  useWriteContract,
+  useAccount,
+  useSimulateContract,
+  useWatchContractEvent,
+} from "wagmi";
 import { UrlContext } from "@/context/UrlContext";
 import { DatePickerWithRange } from "@/components/fragments/DatePicker";
 import {
@@ -22,99 +32,42 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { CardWithForm } from "@/components/fragments/NFTCard";
+import { addDays } from "date-fns";
 
-const ABI = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "paymentTokenAddress",
-        type: "address",
-      },
-      {
-        internalType: "string",
-        name: "_NftTokenName",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_NftSymbol",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_description",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_venue",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_image",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "_startDate",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_endDate",
-        type: "uint256",
-      },
-      {
-        internalType: "uint16",
-        name: "_totalTicketAvailable",
-        type: "uint16",
-      },
-    ],
-    name: "createEvent",
-    outputs: [
-      {
-        internalType: "contract EventContract",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-];
-
-const CONTRACT_ADDRESS = "0xE604Dbf839c5f69116CFB5303E5f0f604F8562ad";
-
-const EventOptionItem = ({ icon: Icon, label, children }) => (
+const EventOption = ({ icon: IconElement, label, children }) => (
   <div className="flex items-center justify-between rounded-xl p-3">
     <div className="flex items-center">
-      <Icon className="mr-2" size={20} />
-      <span>{label}</span>
+      <IconElement className="mr-2" size={20} />
+      <span className="text-sm font-medium">{label}</span>
     </div>
     {children}
   </div>
 );
 
 const Page = () => {
+  //const router = useRouter();
+
   const { url, nftName, nftSymbol, selectedToken } = useContext(UrlContext);
+
   const { address } = useAccount();
+
+  const [date, setDate] = React.useState<DateRange | undefined>({
+    from: new Date(2024, 8, 14).getTime(),
+    to: addDays(new Date(2024, 8, 25), 2).getTime(),
+  });
+
+  console.log(date?.from, date?.to);
+
   const [formData, setFormData] = useState({
-    paymentTokenAddress: "",
-    nftTokenName: "",
-    nftSymbol: "",
+    paymentTokenAddress: selectedToken,
+    nftTokenName: nftName,
+    nftSymbol: nftSymbol,
     eventName: "",
     description: "",
     venue: "",
     image: url,
-    startDate: null,
-    endDate: null,
+    startDate: date.from,
+    endDate: date.to,
     totalTicketAvailable: "",
     requireApproval: false,
     calendar: "Personal Calendar",
@@ -124,7 +77,7 @@ const Page = () => {
 
   const { data: simulateData, error: simulateError } = useSimulateContract({
     address: CONTRACT_ADDRESS,
-    abi: ABI,
+    abi: FactoryABI,
     functionName: "createEvent",
     args: [
       selectedToken,
@@ -133,9 +86,9 @@ const Page = () => {
       formData.eventName,
       formData.description,
       formData.venue,
-      formData.image,
-      formData.startDate ? Math.floor(formData.startDate.getTime() / 1000) : 0,
-      formData.endDate ? Math.floor(formData.endDate.getTime() / 1000) : 0,
+      url,
+      date.from,
+      date.to,
       parseInt(formData.totalTicketAvailable) || 0,
     ],
     account: address,
@@ -159,6 +112,7 @@ const Page = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData);
     if (!formData.eventName || !formData.venue || !formData.description) {
       alert("Please fill in all required fields");
       return;
@@ -176,6 +130,16 @@ const Page = () => {
     }
     console.log("Form submitted:", formData);
   };
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      paymentTokenAddress: selectedToken,
+      nftTokenName: nftName,
+      nftSymbol: nftSymbol,
+      image: url,
+    }));
+  }, [selectedToken, nftName, nftSymbol, url]);
 
   return (
     <div className="flex m-auto max-w-[960px] gap-8 p-4">
@@ -241,33 +205,6 @@ const Page = () => {
           </div>
 
           <input
-            name="paymentTokenAddress"
-            value={selectedToken}
-            onChange={handleInputChange}
-            type="text"
-            placeholder="Payment Token Address"
-            className="bg-white bg-opacity-10 rounded-xl p-3"
-          />
-          <input
-            name="nftTokenName"
-            value={nftName}
-            onChange={handleInputChange}
-            type="text"
-            placeholder="NFT Token Name"
-            className="bg-white bg-opacity-10 rounded-xl p-3"
-          />
-
-          {/* NFT Symbol */}
-          <input
-            name="nftSymbol"
-            value={nftSymbol}
-            onChange={handleInputChange}
-            type="text"
-            placeholder="NFT Symbol"
-            className="bg-white bg-opacity-10 rounded-xl p-3"
-          />
-
-          <input
             name="eventName"
             value={formData.eventName}
             onChange={handleInputChange}
@@ -277,15 +214,7 @@ const Page = () => {
           />
 
           <div className="flex justify-between bg-white bg-opacity-10 rounded-xl p-3">
-            <DatePickerWithRange
-              onChange={(dates) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  startDate: dates.from,
-                  endDate: dates.to,
-                }));
-              }}
-            />
+            <DatePickerWithRange date={date} setDate={setDate} />
           </div>
 
           <div className="grid grid-cols-1 gap-2 bg-white bg-opacity-10 rounded-xl p-3">
@@ -352,7 +281,7 @@ const Page = () => {
           </div>
 
           <div className="space-y-4">
-            <EventOptionItem icon={Users} label="Require Approval">
+            <EventOption icon={Users} label="Require Approval">
               <button
                 type="button"
                 onClick={() => handleToggleChange("requireApproval")}
@@ -366,7 +295,7 @@ const Page = () => {
                   }`}
                 />
               </button>
-            </EventOptionItem>
+            </EventOption>
           </div>
 
           <button
